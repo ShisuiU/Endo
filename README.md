@@ -75,6 +75,37 @@ curl -X PATCH "https://api.supabase.com/v1/projects/ztucdcyfeqaeeogzjzeo/config/
 > le service worker s'enregistre. Vercel le fournit d'office, y compris
 > sur les domaines `*.vercel.app`.
 
+## Skills et MCP (outillage Claude Code)
+
+Tout est versionné dans le dépôt : n'importe quelle session Claude Code
+les trouve automatiquement, sans rien réinstaller.
+
+- **`.claude/skills/`** — 8 skills : `ui-ux-pro-max` (règles UI/UX,
+  accessibilité, palettes, typographie, avec ses données locales) et les
+  7 skills `21st-*` (recherche de composants, revue et génération d'UI).
+- **`.mcp.json`** — déclare le serveur MCP de 21st.dev.
+
+### La clé API 21st
+
+`.mcp.json` ne contient **aucun secret** : il lit la variable
+d'environnement `TWENTYFIRST_API_KEY`. Le dépôt étant public, la clé ne
+doit jamais y être écrite en clair.
+
+À définir une fois, là où tu lances Claude Code :
+
+```bash
+# macOS / Linux — dans ~/.zshrc ou ~/.bashrc
+export TWENTYFIRST_API_KEY="21st_sk_..."
+```
+
+Sur Claude Code web, la variable se règle dans les réglages de
+l'environnement d'exécution. Sans elle, les 8 skills fonctionnent
+quand même : seul le serveur MCP 21st reste inactif.
+
+> Le CLI `21st` (`npx @21st-dev/cli`), lui, lit `TWENTYFIRST_TOKEN` ou
+> `API_KEY_21ST`. Définir les trois avec la même valeur évite les
+> surprises.
+
 ## Regénérer les icônes / splash screens
 
 ```bash

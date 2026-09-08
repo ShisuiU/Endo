@@ -163,14 +163,31 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
   captures d'écran Playwright/Chromium (déjà installés dans
   l'environnement), ce qui était plus rapide qu'un aller-retour Figma pour
   ce projet solo.
-- **MCP 21st (21st.dev)** demandé dans la mission : **non disponible dans
-  cet environnement** (aucun serveur MCP de ce nom n'est connecté à cette
-  session). À défaut, l'inspiration UI vient d'une direction artistique
-  définie à la main (palette/typo signées) plutôt que de composants
-  préfabriqués, ce qui sert justement la contrainte anti-générique.
-  → Si tu relances une session avec ce MCP disponible, il peut être
-  utilisé pour explorer des variations de composants, en gardant la
-  palette/typo définies ci-dessus.
+- **MCP 21st (21st.dev)** : **installé** (session du 2026-09-08). Déclaré
+  dans `.mcp.json` à la racine, versionné, avec la clé lue depuis la
+  variable d'environnement `TWENTYFIRST_API_KEY` — jamais en clair, le
+  dépôt étant public. Attention : un serveur MCP ajouté en cours de
+  session n'est chargé qu'au démarrage de la suivante.
+- **8 skills versionnées dans `.claude/skills/`** pour être disponibles
+  à chaque session sans réinstallation :
+  - `ui-ux-pro-max` (nextlevelbuilder/ui-ux-pro-max-skill, MIT, 3,6 Mo) —
+    119 règles UX, 192 palettes, 74 associations de polices, catalogues
+    d'icônes et de stacks, le tout en données locales interrogeables via
+    `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<requête>" --domain ux`.
+    Code relu avant installation : aucun appel réseau, aucun subprocess,
+    aucun eval, aucune écriture de fichier.
+  - `21st-ai`, `21st-cli-use`, `21st-design-sync`, `21st-registry`,
+    `21st-ui-build`, `21st-ui-explore`, `21st-ui-review` — installées par
+    `npx @21st-dev/cli install-skill` puis versionnées. Ce sont de simples
+    SKILL.md qui pilotent le CLI `21st`.
+  ⚠️ Ne pas les réinstaller par commande : elles sont dans le dépôt. Les
+  réinstaller au niveau du conteneur (`~/.claude/skills/`) ne survivrait
+  pas à la fin de la session.
+- **Rappel anti-générique** : le MCP 21st sert à piocher des composants
+  dans une bibliothèque partagée, ce qui va frontalement contre la
+  contrainte n°1 du projet. À utiliser pour l'audit et l'inspiration, pas
+  pour coller des composants tout faits dans l'app — la direction
+  "Atelier" est faite main exprès.
 - **Sharp + @resvg/resvg-js + @fontsource/fraunces + wawoff2** (npm,
   gratuits/open-source) : utilisés une fois par
   `scripts/generate-icons.mjs` pour rasteriser le monogramme SVG en PNG

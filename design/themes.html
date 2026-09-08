@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>endo — planche des thèmes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:ital,wght@0,400;0,700;1,400;1,700&family=Public+Sans:wght@400;500;600&family=Syne:wght@600;800&family=Manrope:wght@400;500;700&family=Newsreader:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   endo — PLANCHE DES TROIS THÈMES
+   Chaque bloc [data-theme] est autonome et directement transposable
+   dans src/app/globals.css. Les ratios de contraste indiqués sont
+   calculés (WCAG 2.1), pas estimés — seuil AA texte normal : 4.5:1.
+   ══════════════════════════════════════════════════════════════════ */
+
+[data-theme="nocturne"]{
+  --ground:#1A1016; --surface:#241820; --surface-2:#2E2029;
+  --text:#F4EAE6;   --muted:#C3AEB0;
+  --accent:#F0937B; --gold:#D4A64A;  --sage:#9DBA97;
+  --line:rgba(244,234,230,.14);
+  --font-display:"Libre Bodoni", Georgia, serif;
+  --font-ui:"Public Sans", system-ui, sans-serif;
+  --radius:14px; --radius-pill:999px;
+}
+[data-theme="serum"]{
+  --ground:#FAF8F5; --surface:#FFFFFF; --surface-2:#EFEAE4;
+  --text:#171310;   --muted:#6E645E;
+  --accent:#7C2D4A; --gold:#8A6E32;  --sage:#5C6B54;
+  --line:rgba(23,19,16,.13);
+  --font-display:"Syne", system-ui, sans-serif;
+  --font-ui:"Manrope", system-ui, sans-serif;
+  --radius:4px; --radius-pill:4px;
+}
+[data-theme="herbier"]{
+  --ground:#F5F1E8; --surface:#FBF9F3; --surface-2:#EAE4D6;
+  --text:#2A2E24;   --muted:#5F6656;
+  --accent:#A8442A; --gold:#755C26;  --sage:#5F7359;
+  --line:rgba(42,46,36,.16);
+  --font-display:"Newsreader", Georgia, serif;
+  --font-ui:"Public Sans", system-ui, sans-serif;
+  --radius:22px; --radius-pill:26px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;color:#eee;font-family:"Public Sans",system-ui,sans-serif;line-height:1.55}
+.page{max-width:1080px;margin:0 auto;padding:56px 28px 90px}
+.doc-h{border-bottom:1px solid #333;padding-bottom:26px;margin-bottom:14px}
+.doc-h h1{font-family:"Libre Bodoni",serif;font-style:italic;font-weight:400;font-size:38px;letter-spacing:-.02em}
+.doc-h p{color:#999;font-size:14px;margin-top:10px;max-width:74ch}
+.doc-h code{background:#222;padding:1px 6px;border-radius:3px;font-size:13px}
+
+/* une carte par thème, peinte avec ses propres tokens */
+.theme{background:var(--ground);color:var(--text);font-family:var(--font-ui);
+  border-radius:18px;margin-top:38px;padding:34px;border:1px solid #2a2a2a}
+.t-head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px}
+.t-name{font-family:var(--font-display);font-size:34px;line-height:1.1}
+.t-name em{font-style:italic;color:var(--accent)}
+.t-intent{font-size:14px;color:var(--muted);max-width:46ch}
+.sec{margin-top:28px}
+.sec-t{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.sw{border:1px solid var(--line);border-radius:calc(var(--radius) - 2px);overflow:hidden}
+.sw-c{height:56px}
+.sw-m{padding:9px 11px;background:var(--surface);font-size:11px;line-height:1.5}
+.sw-m b{display:block;font-weight:600;font-size:12px}
+.sw-m span{color:var(--muted);font-variant-numeric:tabular-nums}
+.ok{color:var(--sage);font-weight:600}
+
+.type-row{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  padding:14px 0;border-bottom:1px solid var(--line)}
+.type-row:last-child{border:none}
+.type-d{font-family:var(--font-display);font-size:44px;line-height:1.15}
+.type-d.it{font-style:italic}
+.type-meta{font-size:12px;color:var(--muted)}
+
+.comps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px}
+.comp-l{font-size:11px;color:var(--muted);margin-bottom:10px}
+.seg{display:flex;gap:9px}
+.seg div{flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:var(--radius-pill);font-size:14px;color:var(--muted)}
+.seg .on{background:var(--accent);border-color:var(--accent);font-weight:600;
+  color:var(--ground)}
+.scale{display:flex;gap:4px}
+.scale i{flex:1;height:44px;border-radius:calc(var(--radius) - 4px);background:var(--surface-2)}
+.scale i.on{background:var(--accent)}
+.tokens{margin-top:26px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px 20px;overflow-x:auto}
+.tokens pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+  line-height:1.7;color:var(--text);white-space:pre}
+.note{margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.65;max-width:78ch}
+.foot{margin-top:44px;padding-top:22px;border-top:1px solid #333;color:#888;font-size:13px;max-width:80ch}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="doc-h">
+  <h1>endo — planche des thèmes</h1>
+  <p>Les trois directions visuelles réunies : palettes vérifiées, typographies, composants signature
+  et tokens prêts à coller dans <code>src/app/globals.css</code>. Chaque valeur de contraste est
+  <b>calculée</b> selon WCAG 2.1 contre le fond du thème — seuil AA texte normal : 4.5:1.
+  Toutes les cibles tactiles des composants font au moins 44 px.</p>
+</div>
+
+<section class="theme" data-theme="nocturne">
+  <div class="t-head">
+    <div class="t-name"><em>N</em>octurne</div>
+    <div class="t-intent"><b>Nuit, mode, éditorial.</b><br>Fond aubergine profond parce qu'on remplit ce carnet le soir, souvent dans le noir et pendant la douleur. Bodoni apporte le contraste typographique de la presse de mode : franchement féminin, jamais vu dans une app de santé. Le calendrier devient un anneau — une grille ne dit rien d'un cycle.</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Palette — contrastes calculés</div>
+    <div class="swatches"><div class="sw"><div class="sw-c" style="background:#1A1016"></div><div class="sw-m"><b>Fond</b><span>#1A1016 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#241820"></div><div class="sw-m"><b>Surface</b><span>#241820 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#2E2029"></div><div class="sw-m"><b>Surface 2</b><span>#2E2029 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#F4EAE6"></div><div class="sw-m"><b>Texte</b><span>#F4EAE6 · <span class="ok">15.72:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#C3AEB0"></div><div class="sw-m"><b>Texte secondaire</b><span>#C3AEB0 · <span class="ok">8.85:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#F0937B"></div><div class="sw-m"><b>Accent · crise</b><span>#F0937B · <span class="ok">8.11:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#D4A64A"></div><div class="sw-m"><b>Or · médicament</b><span>#D4A64A · <span class="ok">8.28:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#9DBA97"></div><div class="sw-m"><b>Sauge · positif</b><span>#9DBA97 · <span class="ok">8.77:1</span></span></div></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Typographie</div>
+    <div class="type-row">
+      <div class="type-d">08 sept.</div>
+      <div class="type-meta">Libre Bodoni · affichage, dates et scores</div>
+    </div>
+    <div class="type-row">
+      <div class="type-d it" style="font-size:26px">Le carnet du jour</div>
+      <div class="type-meta">variante italique — accents éditoriaux</div>
+    </div>
+    <div class="type-row">
+      <div style="font-size:15px;max-width:44ch">Intensité de la crise, sommeil, humeur : le texte
+      courant reste en Public Sans, 16 px minimum, interlignage 1.5.</div>
+      <div class="type-meta">Public Sans · interface</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Composants signature</div>
+    <div class="comps">
+      <div>
+        <div class="comp-l">Interrupteur — cibles 48 px</div>
+        <div class="seg"><div>Aucune</div><div class="on">Crise</div></div>
+      </div>
+      <div>
+        <div class="comp-l">Réglette 0–10 — crans de 44 px</div>
+        <div class="scale"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tokens">
+    <pre>/* Nocturne — à coller dans @theme inline de globals.css */
+  --color-ground: #1A1016;
+  --color-surface: #241820;
+  --color-surface-2: #2E2029;
+  --color-text: #F4EAE6;
+  --color-muted: #C3AEB0;
+  --color-accent: #F0937B;
+  --color-gold: #D4A64A;
+  --color-sage: #9DBA97;
+  --font-display: "Libre Bodoni";
+  --font-sans: "Public Sans";</pre>
+  </div>
+</section>
+<section class="theme" data-theme="serum">
+  <div class="t-head">
+    <div class="t-name"><em>S</em>érum</div>
+    <div class="t-intent"><b>Lumière, graphique, instrument.</b><br>L'app se lit comme un relevé de laboratoire : dates en 08.09.26, scores en barres, calendrier en code-barres. Très lisible pour la donnée. Réserves : Syne tire vers le graphique plus que vers le féminin, et le code-barres n'est pas tapable jour par jour.</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Palette — contrastes calculés</div>
+    <div class="swatches"><div class="sw"><div class="sw-c" style="background:#FAF8F5"></div><div class="sw-m"><b>Fond</b><span>#FAF8F5 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#FFFFFF"></div><div class="sw-m"><b>Surface</b><span>#FFFFFF · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#EFEAE4"></div><div class="sw-m"><b>Surface 2</b><span>#EFEAE4 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#171310"></div><div class="sw-m"><b>Texte</b><span>#171310 · <span class="ok">17.42:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#6E645E"></div><div class="sw-m"><b>Texte secondaire</b><span>#6E645E · <span class="ok">5.43:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#7C2D4A"></div><div class="sw-m"><b>Accent · crise</b><span>#7C2D4A · <span class="ok">8.5:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#8A6E32"></div><div class="sw-m"><b>Or · médicament</b><span>#8A6E32 · <span class="ok">4.55:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#5C6B54"></div><div class="sw-m"><b>Sauge · positif</b><span>#5C6B54 · <span class="ok">5.37:1</span></span></div></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Typographie</div>
+    <div class="type-row">
+      <div class="type-d">08.09.26</div>
+      <div class="type-meta">Syne · affichage, dates et scores</div>
+    </div>
+    <div class="type-row">
+      <div class="type-d it" style="font-size:26px">Relevé du jour</div>
+      <div class="type-meta">variante italique — accents éditoriaux</div>
+    </div>
+    <div class="type-row">
+      <div style="font-size:15px;max-width:44ch">Intensité de la crise, sommeil, humeur : le texte
+      courant reste en Manrope, 16 px minimum, interlignage 1.5.</div>
+      <div class="type-meta">Manrope · interface</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Composants signature</div>
+    <div class="comps">
+      <div>
+        <div class="comp-l">Interrupteur — cibles 48 px</div>
+        <div class="seg"><div>Aucune</div><div class="on">Crise</div></div>
+      </div>
+      <div>
+        <div class="comp-l">Réglette 0–10 — crans de 44 px</div>
+        <div class="scale"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tokens">
+    <pre>/* Sérum — à coller dans @theme inline de globals.css */
+  --color-ground: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #EFEAE4;
+  --color-text: #171310;
+  --color-muted: #6E645E;
+  --color-accent: #7C2D4A;
+  --color-gold: #8A6E32;
+  --color-sage: #5C6B54;
+  --font-display: "Syne";
+  --font-sans: "Manrope";</pre>
+  </div>
+</section>
+<section class="theme" data-theme="herbier">
+  <div class="t-head">
+    <div class="t-name"><em>H</em>erbier</div>
+    <div class="t-intent"><b>Chaleur, botanique, douceur.</b><br>Papier crème, terracotta et sauge, formes organiques aux angles asymétriques. Le ton s'adresse à toi plutôt que de t'interroger. La plus rassurante des trois, et son calendrier en grille reste le plus facile à taper. En contrepartie, la moins « luxe » des trois.</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Palette — contrastes calculés</div>
+    <div class="swatches"><div class="sw"><div class="sw-c" style="background:#F5F1E8"></div><div class="sw-m"><b>Fond</b><span>#F5F1E8 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#FBF9F3"></div><div class="sw-m"><b>Surface</b><span>#FBF9F3 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#EAE4D6"></div><div class="sw-m"><b>Surface 2</b><span>#EAE4D6 · fond</span></div></div><div class="sw"><div class="sw-c" style="background:#2A2E24"></div><div class="sw-m"><b>Texte</b><span>#2A2E24 · <span class="ok">12.3:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#5F6656"></div><div class="sw-m"><b>Texte secondaire</b><span>#5F6656 · <span class="ok">5.29:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#A8442A"></div><div class="sw-m"><b>Accent · crise</b><span>#A8442A · <span class="ok">5.28:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#755C26"></div><div class="sw-m"><b>Or · médicament</b><span>#755C26 · <span class="ok">5.62:1</span></span></div></div><div class="sw"><div class="sw-c" style="background:#5F7359"></div><div class="sw-m"><b>Sauge · positif</b><span>#5F7359 · <span class="ok">4.56:1</span></span></div></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Typographie</div>
+    <div class="type-row">
+      <div class="type-d">8 septembre</div>
+      <div class="type-meta">Newsreader · affichage, dates et scores</div>
+    </div>
+    <div class="type-row">
+      <div class="type-d it" style="font-size:26px">En quelques gestes</div>
+      <div class="type-meta">variante italique — accents éditoriaux</div>
+    </div>
+    <div class="type-row">
+      <div style="font-size:15px;max-width:44ch">Intensité de la crise, sommeil, humeur : le texte
+      courant reste en Public Sans, 16 px minimum, interlignage 1.5.</div>
+      <div class="type-meta">Public Sans · interface</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Composants signature</div>
+    <div class="comps">
+      <div>
+        <div class="comp-l">Interrupteur — cibles 48 px</div>
+        <div class="seg"><div>Aucune</div><div class="on">Crise</div></div>
+      </div>
+      <div>
+        <div class="comp-l">Réglette 0–10 — crans de 44 px</div>
+        <div class="scale"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tokens">
+    <pre>/* Herbier — à coller dans @theme inline de globals.css */
+  --color-ground: #F5F1E8;
+  --color-surface: #FBF9F3;
+  --color-surface-2: #EAE4D6;
+  --color-text: #2A2E24;
+  --color-muted: #5F6656;
+  --color-accent: #A8442A;
+  --color-gold: #755C26;
+  --color-sage: #5F7359;
+  --font-display: "Newsreader";
+  --font-sans: "Public Sans";</pre>
+  </div>
+</section>
+<div class="foot">
+  <p><b>Comment s'en servir.</b> Copier le bloc de tokens du thème retenu dans
+  <code>@theme inline</code> de <code>src/app/globals.css</code>, charger les deux polices via
+  <code>next/font/google</code> dans <code>src/app/layout.tsx</code>, puis relancer
+  <code>node scripts/generate-icons.mjs</code> après avoir adapté le monogramme aux nouvelles
+  couleurs — sinon l'icône PWA reste sur l'ancienne identité.</p>
+  <p style="margin-top:12px"><b>Ce qui ne change pas d'un thème à l'autre :</b> aucune librairie de
+  composants ni de charts, icônes dessinées à la main, contraste minimum 4.5:1, cibles tactiles
+  ≥ 44 px, <code>prefers-reduced-motion</code> respecté, focus visible au clavier.</p>
+  <p style="margin-top:12px">Contrastes recalculables à tout moment — la formule WCAG est appliquée
+  sur les mêmes valeurs hexadécimales que celles publiées ci-dessus.</p>
+</div>
+
+</div>
+</body>
+</html>

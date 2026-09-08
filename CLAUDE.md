@@ -65,6 +65,24 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
   textuel discret "Enregistrement…" / "Enregistré"), pas de fade-in au
   scroll générique.
 
+## Thèmes — `design/themes.html`
+
+Les trois directions visuelles explorées sont réunies dans un fichier unique,
+**`design/themes.html`** (ouvrir dans un navigateur) : palettes avec contrastes
+WCAG calculés, typographies, composants signature, et les blocs de tokens prêts
+à coller dans `@theme inline` de `globals.css`.
+
+- **Nocturne** (validée par l'utilisatrice) — aubergine profond, Libre Bodoni +
+  Public Sans, calendrier en anneau. Pensée pour la saisie de nuit, en douleur.
+- **Sérum** — clair, Syne + Manrope, calendrier en code-barres. Très lisible
+  pour la donnée, mais moins féminine et le code-barres n'est pas tapable
+  jour par jour.
+- **Herbier** — crème, Newsreader + Public Sans, formes organiques, calendrier
+  en grille souple (le plus facile à taper des trois).
+
+« Atelier » (§ Direction artistique ci-dessus) reste la direction **actuellement
+en production** ; aucune des trois n'est encore implémentée dans l'app.
+
 ## Architecture technique
 
 - **Framework** : Next.js 16 (App Router, Turbopack), React 19, TypeScript.

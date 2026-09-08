@@ -13,10 +13,12 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "profiles: lecture de son propre profil" on public.profiles;
 create policy "profiles: lecture de son propre profil"
   on public.profiles for select
   using (auth.uid() = id);
 
+drop policy if exists "profiles: mise à jour de son propre profil" on public.profiles;
 create policy "profiles: mise à jour de son propre profil"
   on public.profiles for update
   using (auth.uid() = id);
@@ -52,19 +54,23 @@ alter table public.daily_entries enable row level security;
 create index if not exists daily_entries_user_date_idx
   on public.daily_entries (user_id, entry_date desc);
 
+drop policy if exists "daily_entries: propriétaire uniquement (lecture)" on public.daily_entries;
 create policy "daily_entries: propriétaire uniquement (lecture)"
   on public.daily_entries for select
   using (auth.uid() = user_id);
 
+drop policy if exists "daily_entries: propriétaire uniquement (création)" on public.daily_entries;
 create policy "daily_entries: propriétaire uniquement (création)"
   on public.daily_entries for insert
   with check (auth.uid() = user_id);
 
+drop policy if exists "daily_entries: propriétaire uniquement (mise à jour)" on public.daily_entries;
 create policy "daily_entries: propriétaire uniquement (mise à jour)"
   on public.daily_entries for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+drop policy if exists "daily_entries: propriétaire uniquement (suppression)" on public.daily_entries;
 create policy "daily_entries: propriétaire uniquement (suppression)"
   on public.daily_entries for delete
   using (auth.uid() = user_id);
@@ -80,6 +86,7 @@ begin
 end;
 $$;
 
+drop trigger if exists daily_entries_set_updated_at on public.daily_entries;
 create trigger daily_entries_set_updated_at
   before update on public.daily_entries
   for each row
@@ -98,6 +105,7 @@ begin
 end;
 $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row

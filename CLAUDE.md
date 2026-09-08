@@ -229,12 +229,28 @@ ressembler à un site généré par IA.**
 - `next build`, `tsc --noEmit` et `eslint` passent sans erreur.
 - Vérification visuelle (capture d'écran Chromium) de l'écran de
   connexion — rendu conforme à la direction artistique.
+- **Migration validée sur un vrai PostgreSQL 16** (local, avec un stub du
+  schéma `auth` de Supabase : `auth.users` + `auth.uid()`). 8 vérifications
+  passées : création auto des profils par trigger, écriture par le
+  propriétaire, isolation RLS en lecture/écriture/suppression entre deux
+  comptes, refus d'écrire au nom d'autrui, upsert `on conflict
+  (user_id, entry_date)` (celui de `entries-client.ts`) avec `updated_at`
+  rafraîchi, et bornes 0–10 sur les scores.
+- Migration rendue **idempotente** (`drop policy/trigger if exists`) :
+  elle peut être rejouée sans erreur, vérifié sur 3 passages consécutifs.
+- `scripts/setup-supabase.mjs` : crée le projet via la Management API,
+  applique la migration, récupère la clé anon et écrit `.env.local`.
 
 **Reste à faire :**
-- Créer le projet Supabase réel, appliquer la migration, renseigner
-  `.env.local`, et retester le flux d'inscription/connexion en conditions
-  réelles (la vérification faite pendant cette session utilisait des
-  identifiants Supabase factices).
+- **Créer le projet Supabase réel** — bloqué côté agent : cela demande un
+  compte Supabase (email à vérifier, CGU à accepter) et aucun identifiant
+  n'est disponible dans l'environnement de session. Deux chemins, voir
+  README § Configurer Supabase : soit `scripts/setup-supabase.mjs` avec un
+  Personal Access Token, soit création manuelle dans le dashboard puis
+  report de `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Une fois les clés en place, retester le flux inscription/connexion en
+  conditions réelles (le schéma lui-même est déjà validé sur Postgres,
+  voir plus haut).
 - Déployer (Vercel recommandé, gratuit pour un usage perso) pour tester
   l'installation réelle sur iPhone — non fait dans cette session car
   aucun compte de déploiement n'était disponible.

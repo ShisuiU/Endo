@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronLeftIcon } from "@/components/icons";
 import { DailyEntryForm } from "@/components/daily/daily-entry-form";
+import { isValidISODate } from "@/lib/date";
 
 export default async function DayPage({
   params,
@@ -8,6 +10,9 @@ export default async function DayPage({
   params: Promise<{ date: string }>;
 }) {
   const { date } = await params;
+  // Le segment vient de l'URL : une date bricolée à la main ne doit pas
+  // faire tomber la page (Intl.DateTimeFormat lève sur une date invalide).
+  if (!isValidISODate(date)) notFound();
 
   return (
     <div>

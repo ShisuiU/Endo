@@ -72,6 +72,19 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
   `globals.css`, pas de `tailwind.config.js`).
 - **Backend** : Supabase (Postgres + Auth + RLS). Voir
   `supabase/migrations/0001_init.sql` pour le schéma complet.
+  - **Projet réel créé** (session du 2026-09-08) : organisation
+    `ShisuiU's Org`, ref `ztucdcyfeqaeeogzjzeo`, région `eu-west-3`
+    (Paris), URL `https://ztucdcyfeqaeeogzjzeo.supabase.co`. Migration
+    appliquée, schéma vérifié en production. Les clés sont dans
+    `.env.local` (non versionné) — la clé `anon` est publique par
+    conception, c'est la RLS qui protège.
+  - **Deux réglages à connaître** côté dashboard Supabase :
+    `mailer_autoconfirm` est à `false` (confirmation email exigée) alors
+    que le SMTP intégré est limité à 2 emails/heure et réservé au test —
+    à basculer, ou brancher un vrai SMTP, avant usage réel. Et `site_url`
+    vaut encore `http://localhost:3000` : à passer sur l'URL de
+    production au moment du déploiement, sinon les liens des emails
+    d'auth pointeront vers localhost.
   - `profiles` — un profil léger par utilisateur (créé automatiquement à
     l'inscription via trigger `handle_new_user`).
   - `daily_entries` — une ligne par jour et par utilisateur (`unique
@@ -240,17 +253,28 @@ ressembler à un site généré par IA.**
   elle peut être rejouée sans erreur, vérifié sur 3 passages consécutifs.
 - `scripts/setup-supabase.mjs` : crée le projet via la Management API,
   applique la migration, récupère la clé anon et écrit `.env.local`.
+- **Projet Supabase réel créé et branché**, puis vérifié de bout en bout
+  contre la vraie base : inscription de deux comptes, création
+  automatique des profils par trigger, connexion via l'UI, écriture
+  d'une entrée, isolation RLS confirmée (un compte ne voit, ne modifie
+  ni ne supprime rien de l'autre ; un visiteur non connecté ne lit
+  rien), et toutes les fonctions de `entries-client.ts` (fetchEntry,
+  fetchEntriesInRange, fetchAllCrisisDates, upsertEntry) testées contre
+  la vraie base. Données de test supprimées ensuite.
+- **Deux plantages corrigés**, trouvés en faisant tourner l'app pour de
+  vrai (ils n'apparaissaient ni au build, ni au typecheck, ni au lint) :
+  1. `/statistiques` tombait en 500 à chaque ouverture — `friendlyDate`
+     était appelée sur `dates[0]` alors que le tableau est vide au
+     premier rendu.
+  2. `/jour/<date invalide>` tombait en 500 — `Intl.DateTimeFormat` lève
+     sur une date invalide, et le segment vient de l'URL. Ajout de
+     `isValidISODate()` dans `src/lib/date.ts` et d'un `notFound()`.
 
 **Reste à faire :**
-- **Créer le projet Supabase réel** — bloqué côté agent : cela demande un
-  compte Supabase (email à vérifier, CGU à accepter) et aucun identifiant
-  n'est disponible dans l'environnement de session. Deux chemins, voir
-  README § Configurer Supabase : soit `scripts/setup-supabase.mjs` avec un
-  Personal Access Token, soit création manuelle dans le dashboard puis
-  report de `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-- Une fois les clés en place, retester le flux inscription/connexion en
-  conditions réelles (le schéma lui-même est déjà validé sur Postgres,
-  voir plus haut).
+- Trancher la question de la confirmation par email (voir § Architecture,
+  `mailer_autoconfirm`) : soit la désactiver pour un usage perso, soit
+  brancher un SMTP réel (Resend a un palier gratuit) — en l'état, le SMTP
+  intégré de Supabase ne délivrera pas de façon fiable.
 - Déployer (Vercel recommandé, gratuit pour un usage perso) pour tester
   l'installation réelle sur iPhone — non fait dans cette session car
   aucun compte de déploiement n'était disponible.

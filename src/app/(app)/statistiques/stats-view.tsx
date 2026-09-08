@@ -73,9 +73,11 @@ export function StatsView() {
         <TrendLine label="Douleur" values={painValues} />
         <TrendLine label="Sommeil" values={sleepValues} />
         <TrendLine label="Humeur" values={moodValues} />
-        <p className="text-[0.7rem] text-muted/80">
-          {friendlyDate(dates[0])} → {friendlyDate(dates[dates.length - 1] ?? dates[0])}
-        </p>
+        {dates.length > 0 && (
+          <p className="text-[0.7rem] text-muted/80">
+            {friendlyDate(dates[0])} → {friendlyDate(dates[dates.length - 1])}
+          </p>
+        )}
       </section>
     </div>
   );

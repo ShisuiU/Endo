@@ -45,7 +45,10 @@ export const metadata: Metadata = {
     ],
   },
   other: {
-    "mobile-web-app-capable": "yes",
+    // Next.js émet déjà `mobile-web-app-capable` (standard, honoré par
+    // iOS 15.4+) à partir de `appleWebApp.capable`. On ajoute seulement la
+    // variante Apple historique, pour le mode plein écran sur iOS ancien.
+    "apple-mobile-web-app-capable": "yes",
   },
 };
 

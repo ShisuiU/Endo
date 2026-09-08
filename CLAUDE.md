@@ -87,10 +87,9 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
     en base fonctionne dans la foulée. Si un jour tu veux rétablir la
     vérification d'adresse, il faut d'abord brancher un vrai SMTP
     (Resend a un palier gratuit) puis repasser le réglage à `false`.
-  - **`site_url` vaut encore `http://localhost:3000`** : à passer sur
-    l'URL de production au moment du déploiement, sinon les liens des
-    emails d'auth (réinitialisation de mot de passe notamment)
-    pointeront vers localhost.
+  - **`site_url` pointe sur la production** : `https://endo-seven.vercel.app`
+    (mis à jour au déploiement, pour que les liens des emails d'auth ne
+    pointent plus vers localhost).
   - `profiles` — un profil léger par utilisateur (créé automatiquement à
     l'inscription via trigger `handle_new_user`).
   - `daily_entries` — une ligne par jour et par utilisateur (`unique
@@ -126,6 +125,28 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
 - **Pourquoi Supabase** : palier gratuit généreux, Postgres + Auth + RLS
   gérés, évite d'écrire un backend/API maison pour un projet perso — choix
   validé avec l'utilisateur en cadrage.
+
+## Déploiement
+
+- **Hébergement : Vercel**, projet `endo` (compte `thebestsam37-1731`),
+  déployé via la CLI (`vercel deploy --prod`), pas encore relié à Git.
+  Production : **https://endo-seven.vercel.app**
+- Les deux variables `NEXT_PUBLIC_SUPABASE_*` sont posées sur le projet
+  Vercel (cibles production/preview/development) — `.env.local` n'est
+  jamais envoyé. Vérifié : elles sont bien compilées dans le bundle
+  client servi en production.
+- **`ssoProtection` a été désactivée** sur le projet Vercel. Elle est
+  active par défaut et exigeait une connexion *Vercel* pour ouvrir le
+  site, ce qui rend une PWA ininstallable sur iPhone. Les données ne sont
+  pas exposées pour autant : l'app a sa propre authentification Supabase
+  et la RLS. Ne pas la réactiver sans mesurer cet effet.
+- **Pas encore de déploiement automatique** : `vercel git connect`
+  relierait le dépôt pour redéployer à chaque push sur la branche par
+  défaut. À faire si tu veux ce confort.
+- Le dépôt a maintenant une branche `main` (même contenu que la branche
+  de travail). Elle n'est pas encore la branche *par défaut* côté GitHub
+  — ce réglage n'est pas modifiable depuis une session Claude Code, à
+  changer à la main dans Settings → Branches.
 
 ## MCP / Skills utilisés
 
@@ -267,6 +288,12 @@ ressembler à un site généré par IA.**
   rien), et toutes les fonctions de `entries-client.ts` (fetchEntry,
   fetchEntriesInRange, fetchAllCrisisDates, upsertEntry) testées contre
   la vraie base. Données de test supprimées ensuite.
+- **Déployé en production sur Vercel** (https://endo-seven.vercel.app) et
+  vérifié en ligne : accès public, en-têtes de sécurité, `manifest.webmanifest`,
+  `sw.js` servi en `application/javascript` avec `no-cache`, icônes, splash
+  screens et page hors-ligne tous accessibles, meta tags Apple présents,
+  et les quatre pages authentifiées répondent 200 avec une vraie session
+  (donc Vercel valide bien le jeton auprès de Supabase).
 - Confirmation par email désactivée puis **inscription revérifiée de bout
   en bout** : session ouverte immédiatement, écriture en base dans la
   foulée. Comptes de test supprimés, base laissée vide.
@@ -280,13 +307,14 @@ ressembler à un site généré par IA.**
      `isValidISODate()` dans `src/lib/date.ts` et d'un `notFound()`.
 
 **Reste à faire :**
-- Passer `site_url` sur l'URL de production au moment du déploiement
-  (voir § Architecture).
-- Déployer (Vercel recommandé, gratuit pour un usage perso) pour tester
-  l'installation réelle sur iPhone — non fait dans cette session car
-  aucun compte de déploiement n'était disponible.
-- Tester concrètement sur iPhone : icône, absence de barre d'adresse en
-  standalone, lancement hors-ligne, splash screens.
+- **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,
+  et il ne peut pas être fait depuis une session Claude Code : Safari →
+  Partager → Sur l'écran d'accueil, puis vérifier l'icône, l'absence de
+  barre d'adresse en standalone, le splash screen et le lancement hors
+  connexion.
+- Éventuel : `vercel git connect` pour les déploiements automatiques à
+  chaque push, et définir `main` comme branche par défaut côté GitHub.
+
 - Éventuel : export CSV des données, rappel de médicament programmable,
   édition/suppression explicite d'une entrée depuis le calendrier (l'édition
   fonctionne déjà via `/jour/[date]`, mais pas de suppression dédiée).

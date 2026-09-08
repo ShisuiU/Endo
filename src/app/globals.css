@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+ * Endo — direction artistique "Atelier"
+ * Palette signée : ivoire chaud, encre bordeaux, rosewood, filet laiton.
+ * Aucune couleur "IA générique" (pas de violet/bleu dégradé).
+ */
+:root {
+  --color-ivory: #fbf6f1;
+  --color-ivory-deep: #f3ebe2;
+  --color-ink: #3b0f1f;
+  --color-ink-soft: #5c2436;
+  --color-rosewood: #c98374;
+  --color-rosewood-soft: #e3b6ab;
+  --color-brass: #b08d57;
+  --color-sage: #90a189;
+  --color-charcoal: #211a1d;
+  --color-paper-line: rgba(59, 15, 31, 0.12);
+
+  --background: var(--color-ivory);
+  --foreground: var(--color-ink);
+  --surface: #ffffff;
+  --accent: var(--color-rosewood);
+  --hairline: var(--color-paper-line);
+  --muted: #8a7268;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-ivory: var(--color-ivory);
+  --color-ivory-deep: var(--color-ivory-deep);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-rosewood: var(--color-rosewood);
+  --color-rosewood-soft: var(--color-rosewood-soft);
+  --color-brass: var(--color-brass);
+  --color-sage: var(--color-sage);
+  --color-charcoal: var(--color-charcoal);
+  --color-accent: var(--accent);
+  --color-hairline: var(--hairline);
+  --color-muted: var(--muted);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-instrument);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--color-charcoal);
+    --foreground: #f3e9e2;
+    --surface: #2b2226;
+    --accent: var(--color-rosewood-soft);
+    --hairline: rgba(243, 233, 226, 0.14);
+    --muted: #b9a89e;
+  }
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+::selection {
+  background: var(--color-rosewood-soft);
+  color: var(--color-ink);
+}
+
+/* Filet fin réutilisable — signature "carnet" plutôt que card + shadow */
+.hairline {
+  border: 1px solid var(--hairline);
+}
+
+.hairline-t {
+  border-top: 1px solid var(--hairline);
+}
+
+.hairline-b {
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Chiffres tabulaires pour les scores /10 et dates */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

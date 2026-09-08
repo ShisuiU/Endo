@@ -1,0 +1,139 @@
+import type { SVGProps } from "react";
+
+/**
+ * Set d'icônes maison, dessinées pour "endo" — trait fin unique (1.5),
+ * légèrement irrégulier plutôt que géométriquement parfait, pour éviter
+ * l'effet "set d'icônes de librairie" (Heroicons/Lucide non retouchés).
+ * Toutes héritent de currentColor.
+ */
+type IconProps = SVGProps<SVGSVGElement>;
+
+const base = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+export function MoonIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M15.5 3.2c-4.9.9-8 5-7.4 9.9.6 4.6 4.9 7.9 9.5 7.4-2.7 2-6.4 2.6-9.8 1C3.2 19.4.9 14.6 2.5 9.8 3.9 5.6 8 2.8 12.4 3c1.1.1 2.1.3 3.1.2Z" />
+    </svg>
+  );
+}
+
+export function DropletIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 2.5c2.6 3.4 6 8 6 11.4a6 6 0 1 1-12 0c0-3.4 3.4-8 6-11.4Z" />
+      <path d="M9.5 15.2c0 1.3 1 2.4 2.3 2.5" opacity={0.6} />
+    </svg>
+  );
+}
+
+export function SparkIcon(props: IconProps) {
+  // crise / poussée — un éclat asymétrique plutôt qu'un zap générique
+  return (
+    <svg {...base} {...props}>
+      <path d="M12.6 2.6 9.3 13h3.4l-1 8.4 6.9-11.7h-3.7l1.7-7.1Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function PillIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3.2" y="9.4" width="17.6" height="7.2" rx="3.6" transform="rotate(-32 12 13)" />
+      <path d="M11 9.2 14.7 15" transform="rotate(-32 12 13)" opacity={0.6} />
+    </svg>
+  );
+}
+
+export function LeafIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M19.5 4.7c.6 6.7-1.5 11-6.8 13.9-3.7 2-7.3.6-8-2.8C3.9 12 6.7 8 12 6.1c2.4-.9 5-1.2 7.5-1.4Z" />
+      <path d="M6.5 20c1.6-4.3 4-7.4 7.8-9.7" opacity={0.6} />
+    </svg>
+  );
+}
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3.5" y="5.2" width="17" height="15.3" rx="2.2" />
+      <path d="M3.5 9.6h17" />
+      <path d="M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+export function ChartIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 19V9.5M9.5 19V5M15 19v-6.5M20 19V11" />
+      <path d="M3.5 19.5h17" opacity={0.5} />
+    </svg>
+  );
+}
+
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M14.5 5 8 12l6.5 7" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9.5 5 16 12l-6.5 7" />
+    </svg>
+  );
+}
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 4.5v15M4.5 12h15" />
+    </svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4.5 12.5 9.2 17 19.5 6" />
+    </svg>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+export function NoteIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 3.5h9.2L19 7.3V20a.7.7 0 0 1-.7.7H6a.7.7 0 0 1-.7-.7V4.2A.7.7 0 0 1 6 3.5Z" />
+      <path d="M9 9.2h6M9 12.6h6M9 16h4" opacity={0.6} />
+    </svg>
+  );
+}
+
+export function LogoutIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9.5 4.5H6a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 6 19.5h3.5" />
+      <path d="M14 8l4 4-4 4M18 12H9" />
+    </svg>
+  );
+}

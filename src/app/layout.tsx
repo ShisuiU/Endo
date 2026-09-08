@@ -1,18 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Instrument_Sans } from "next/font/google";
+import { Libre_Bodoni, Public_Sans } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Libre Bodoni : contraste typographique de la presse de mode. L'italique
+// porte le logotype, les dates et les scores.
+const bodoni = Libre_Bodoni({
+  variable: "--font-bodoni",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
   style: ["normal", "italic"],
   display: "swap",
 });
 
-const instrument = Instrument_Sans({
-  variable: "--font-instrument",
+const publicSans = Public_Sans({
+  variable: "--font-public-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -87,17 +88,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf6f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#211a1d" },
-  ],
+  themeColor: "#1a1016",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="fr"
-      className={`${fraunces.variable} ${instrument.variable} h-full antialiased`}
+      className={`${bodoni.variable} ${publicSans.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

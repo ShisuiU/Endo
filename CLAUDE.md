@@ -22,48 +22,53 @@ Contraintes du projet :
   fonctionnement correct hors-ligne pour le shell de l'app.
 - **Aucun aspect "généré par IA"** — voir § Ce qu'il ne faut PAS faire.
 
-## Direction artistique — "Atelier"
+## Direction artistique — "Nocturne"
 
-Direction validée : **premium et féminine**, éditoriale, sans tomber dans
-les clichés pastel/lavande ni dans l'esthétique "IA générique"
-(violet/bleu dégradé, Inter partout, icônes de librairie non retouchées).
+Direction **implémentée** (validée par l'utilisatrice après comparaison de
+trois pistes, voir `design/themes.html`). **Premium et féminine**, éditoriale,
+sans cliché pastel/lavande ni esthétique "IA générique".
 
-**Palette** (définie dans `src/app/globals.css`, tokens Tailwind v4 via
-`@theme inline`) :
-- `ivory` `#FBF6F1` — fond principal, chaud plutôt que blanc froid.
-- `ink` `#3B0F1F` — encre bordeaux profond, texte et CTA principaux.
-- `rosewood` `#C98374` — accent (scores, crise, liens actifs).
-- `brass` `#B08D57` — filet laiton, utilisé avec parcimonie (séparateurs,
-  pastille médicament sur le calendrier).
-- `sage` `#90A189` — réservée pour une utilisation future (statuts positifs).
-- Mode sombre : fond `charcoal` `#211A1D`, texte `#F3E9E2`, accent
-  `rosewood-soft` `#E3B6AB` — bascule automatique via
-  `prefers-color-scheme`.
+**Pourquoi un fond sombre** : ce carnet se remplit le soir et pendant la
+douleur. Un fond ivoire éblouit dans le noir. L'aubergine est chaud, jamais
+gris ni noir clinique.
 
-**Typographies** (via `next/font/google`, chargées dans
-`src/app/layout.tsx`) :
-- **Fraunces** (`--font-fraunces` / classe `font-display`), axes
-  optionnels `opsz`/`SOFT`/`WONK` activés, italique 900 pour le
-  logotype et les gros chiffres — volontairement irrégulier ("wonky") pour
-  ne pas ressembler à un serif corporate lisse.
-- **Instrument Sans** (`--font-instrument` / `font-sans`) — interface et
-  texte courant. Ni Inter, ni Geist.
+**Palette** (`src/app/globals.css`, tokens Tailwind v4 via `@theme inline`).
+Contrastes **calculés** WCAG 2.1 contre le fond `#1A1016` :
+- `ground` `#1A1016` — aubergine profond, fond de l'app.
+- `surface` `#241820` / `surface-2` `#2E2029` — plans relevés.
+- `text` `#F4EAE6` — 15.72:1.
+- `muted` `#C3AEB0` — 8.85:1.
+- `coral` `#F0937B` — accent : crise, scores, liens actifs. 8.11:1.
+- `brass` `#D4A64A` — pastille médicament. 8.28:1.
+- `sage` `#9DBA97` — tendances positives (sommeil, humeur). 8.77:1.
+
+L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
+
+**Typographies** (`next/font/google`, dans `src/app/layout.tsx`) :
+- **Libre Bodoni** (`--font-bodoni` / classe `font-display`) — contraste
+  typographique de la presse de mode. Porte le logotype, les dates et les
+  scores. Choisi contre Playfair Display, trop vu et glissant vers le
+  générique.
+- **Public Sans** (`--font-public-sans` / `font-sans`) — interface et texte
+  courant. Ni Inter, ni Geist.
 
 **Principes de design** :
-- Filets fins (`.hairline`, 1px, `var(--hairline)`) plutôt que des cards à
-  ombre portée — esthétique "carnet papier", pas "dashboard SaaS".
-- Composants faits main plutôt que primitives de librairie par défaut :
-  `ScoreSlider` (réglette 0–10 à pastilles, pas un `<input type="range">`),
-  `Toggle` (oui/non à deux libellés), `TagInput` (étiquettes d'aliments),
-  calendrier mensuel avec pastilles couleur plutôt qu'une grille chargée.
-- Icônes maison en SVG inline (`src/components/icons.tsx`) — trait fin
-  1.5, légèrement asymétrique, jamais un import Heroicons/Lucide brut.
-- Monogramme "e" en Fraunces 900 italique, cerclé d'un filet laiton avec un
-  point rosewood — logotype de l'app et base de toutes les icônes PWA
-  (généré par `scripts/generate-icons.mjs`, voir § PWA).
-- Micro-interactions : sauvegarde automatique silencieuse (indicateur
-  textuel discret "Enregistrement…" / "Enregistré"), pas de fade-in au
-  scroll générique.
+- **Cibles tactiles d'abord** : crans de réglette à 44 px, pilules à 52 px,
+  boutons de nav à 56 px. C'est la contrainte qui a dicté le dessin — la
+  version précédente affichait des pastilles de 5 px, quasi invisables
+  pendant une crise.
+- Filets fins (`.hairline`) plutôt que des cards à ombre portée. Sur fond
+  sombre, c'est l'écart de valeur qui sépare les plans.
+- Composants faits main : `ScoreSlider`, `Toggle`, `TagInput`, `Field`
+  (libellé montant), `MonthRing`, `TrendLine`. Aucune librairie d'UI ni de
+  charts.
+- **Calendrier en anneau** (`MonthRing`) plutôt qu'en grille : une grille de
+  tableur ne raconte rien d'un cycle. Les jours restent ouvrables grâce à
+  des secteurs de clic transparents (72 × 56 px de boîte englobante, mesuré).
+- Icônes maison en SVG inline (`src/components/icons.tsx`), trait 1.5.
+- Logotype : "endo" en Libre Bodoni italique, sans cartouche.
+- Micro-interactions : sauvegarde automatique silencieuse, transitions
+  d'état des contrôles. `prefers-reduced-motion` coupe tout globalement.
 
 ## Thèmes — `design/themes.html`
 
@@ -72,16 +77,19 @@ Les trois directions visuelles explorées sont réunies dans un fichier unique,
 WCAG calculés, typographies, composants signature, et les blocs de tokens prêts
 à coller dans `@theme inline` de `globals.css`.
 
-- **Nocturne** (validée par l'utilisatrice) — aubergine profond, Libre Bodoni +
-  Public Sans, calendrier en anneau. Pensée pour la saisie de nuit, en douleur.
+- **Nocturne** — aubergine profond, Libre Bodoni + Public Sans, calendrier en
+  anneau. Pensée pour la saisie de nuit, en douleur. **C'est la direction en
+  place.**
 - **Sérum** — clair, Syne + Manrope, calendrier en code-barres. Très lisible
   pour la donnée, mais moins féminine et le code-barres n'est pas tapable
   jour par jour.
 - **Herbier** — crème, Newsreader + Public Sans, formes organiques, calendrier
   en grille souple (le plus facile à taper des trois).
 
-« Atelier » (§ Direction artistique ci-dessus) reste la direction **actuellement
-en production** ; aucune des trois n'est encore implémentée dans l'app.
+**Nocturne est implémentée** (§ Direction artistique ci-dessus). Les deux
+autres restent documentées comme alternatives : la planche sert de référence
+si tu veux revenir en arrière ou repartir sur l'une d'elles. « Atelier », la
+toute première direction, n'existe plus que dans l'historique Git.
 
 ## Architecture technique
 
@@ -240,10 +248,15 @@ en production** ; aucune des trois n'est encore implémentée dans l'app.
   /aujourdhui`, icônes 192/512 + variante `maskable` 512.
 - **Icônes** : générées par `scripts/generate-icons.mjs` dans
   `public/icons/` (16, 32, apple-touch-icon 180, 192, 512, 512 maskable)
-  et `public/splash/` (5 résolutions iPhone courantes). Le script embarque
-  la police Fraunces (décompressée depuis `@fontsource/fraunces` avec
-  `wawoff2`) pour un rendu fidèle sans dépendre des polices système —
-  relancer `node scripts/generate-icons.mjs` si le monogramme change.
+  et `public/splash/` (5 résolutions iPhone courantes). Relancer
+  `node scripts/generate-icons.mjs` si le monogramme change.
+  ⚠️ **Le glyphe est converti en tracé vectoriel par `opentype.js`, jamais
+  rendu comme du `<text>`.** Raison : `resvg` ignore silencieusement la
+  police passée via `fontBuffers` et retombe sur les polices système —
+  vérifié en comparant les empreintes, le rendu avec tampon de police est
+  bit à bit identique au rendu avec les polices système. Les icônes des
+  premières sessions étaient donc en police de repli sans que ça se voie,
+  alors que la doc affirmait le contraire. En tracé, c'est déterministe.
 - **Meta tags Apple** : `appleWebApp` (capable, status bar
   `black-translucent`) dans `metadata`, `apple-touch-startup-image` par
   media query dans `src/app/layout.tsx` (`SPLASH_SCREENS`).
@@ -270,8 +283,10 @@ Rappel explicite pour toute session future : **ce projet ne doit jamais
 ressembler à un site généré par IA.**
 - Ne pas réintroduire Inter, Geist, ou une police sans personnalité.
 - Ne pas utiliser de dégradé violet/bleu, ni la palette Tailwind par
-  défaut (`zinc`, `indigo`...) — rester sur les tokens `ivory/ink/
-  rosewood/brass` définis dans `globals.css`.
+  défaut (`zinc`, `indigo`...) — rester sur les tokens `ground/surface/
+  text/coral/brass/sage` définis dans `globals.css`.
+- Ne pas descendre sous 44 px pour une cible tactile : c'est la contrainte
+  qui a motivé la refonte, la reperdre annulerait le gain principal.
 - Ne pas importer un set d'icônes (Heroicons, Lucide, Feather...) tel
   quel — étendre `src/components/icons.tsx` à la main.
 - Ne pas ajouter de librairie de composants (shadcn/MUI/Chakra) ni de

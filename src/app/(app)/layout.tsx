@@ -17,15 +17,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex-1 flex flex-col min-h-full">
       <header
-        className="hairline-b flex items-center justify-between px-5 py-3.5 bg-background/95 backdrop-blur sticky top-0 z-20"
-        style={{ paddingTop: "max(0.875rem, env(safe-area-inset-top))" }}
+        className="hairline-b flex items-center justify-between px-6 pb-4 bg-background/95 backdrop-blur sticky top-0 z-20"
+        style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       >
         <Wordmark />
         <form action={signOut}>
           <button
             type="submit"
             aria-label="Se déconnecter"
-            className="text-muted hover:text-foreground"
+            className="w-11 h-11 -mr-2 flex items-center justify-center text-muted hover:text-foreground"
           >
             <LogoutIcon className="w-5 h-5" />
           </button>

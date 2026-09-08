@@ -2,11 +2,11 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { CloseIcon } from "@/components/icons";
-import { cn } from "@/lib/cn";
 
 /**
- * Saisie d'aliments libres sous forme d'étiquettes. Entrée ou virgule pour
- * ajouter, croix fine pour retirer — pas de composant de librairie UI.
+ * Saisie d'aliments en étiquettes libres. Entrée ou virgule pour ajouter,
+ * croix pour retirer. Les étiquettes font 40 px et leur bouton de
+ * suppression 32 px — assez large pour ne pas rater la cible.
  */
 export function TagInput({
   values,
@@ -36,22 +36,20 @@ export function TagInput({
   }
 
   return (
-    <div className="hairline rounded-xl px-3 py-2.5 flex flex-wrap items-center gap-1.5 focus-within:border-accent/60">
+    <div className="hairline rounded-2xl px-3 py-2.5 flex flex-wrap items-center gap-2 focus-within:border-accent/60">
       {values.map((tag) => (
         <span
           key={tag}
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full bg-ivory-deep px-2.5 py-1 text-xs text-ink-soft"
-          )}
+          className="inline-flex items-center gap-1 rounded-full bg-surface-2 pl-4 pr-1 h-10 text-[0.85rem] text-foreground"
         >
           {tag}
           <button
             type="button"
             onClick={() => onChange(values.filter((t) => t !== tag))}
             aria-label={`Retirer ${tag}`}
-            className="opacity-60 hover:opacity-100"
+            className="w-8 h-8 flex items-center justify-center rounded-full text-muted hover:text-foreground"
           >
-            <CloseIcon className="w-2.5 h-2.5" />
+            <CloseIcon className="w-3 h-3" />
           </button>
         </span>
       ))}
@@ -61,7 +59,7 @@ export function TagInput({
         onKeyDown={handleKeyDown}
         onBlur={commit}
         placeholder={values.length === 0 ? placeholder : undefined}
-        className="flex-1 min-w-[8ch] bg-transparent text-sm outline-none placeholder:text-muted/70 py-1"
+        className="flex-1 min-w-[10ch] h-10 bg-transparent text-[0.95rem] outline-none placeholder:text-muted/70"
       />
     </div>
   );

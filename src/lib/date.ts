@@ -39,3 +39,21 @@ export function daysBetween(a: string, b: string): number {
   const diff = Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad);
   return Math.round(diff / 86_400_000);
 }
+
+const DAY_ONLY = new Intl.DateTimeFormat("fr-FR", { day: "2-digit" });
+const MONTH_SHORT = new Intl.DateTimeFormat("fr-FR", { month: "short" });
+const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "long" });
+
+/** Découpe une date ISO pour la composition éditoriale « 08 sept. » :
+ *  le jour et le mois sont typographiés séparément (chiffres droits,
+ *  mois en italique), il faut donc les récupérer distinctement. */
+export function dateParts(iso: string): { day: string; month: string; weekday: string } {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const weekday = WEEKDAY.format(date);
+  return {
+    day: DAY_ONLY.format(date),
+    month: MONTH_SHORT.format(date),
+    weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
+  };
+}

@@ -1,59 +1,47 @@
 @import "tailwindcss";
 
 /*
- * Endo — direction artistique "Atelier"
- * Palette signée : ivoire chaud, encre bordeaux, rosewood, filet laiton.
- * Aucune couleur "IA générique" (pas de violet/bleu dégradé).
+ * endo — direction artistique "Nocturne"
+ * Aubergine profond, Libre Bodoni éditorial, accent corail.
+ * Le fond sombre n'est pas un effet de style : ce carnet se remplit le soir
+ * et pendant la douleur, un fond ivoire éblouit dans le noir.
+ * Contrastes calculés (WCAG 2.1) contre le fond #1A1016 :
+ *   text 15.72:1 · muted 8.85:1 · accent 8.11:1 · brass 8.28:1 · sage 8.77:1
+ * Voir design/themes.html pour la planche complète des trois directions.
  */
 :root {
-  --color-ivory: #fbf6f1;
-  --color-ivory-deep: #f3ebe2;
-  --color-ink: #3b0f1f;
-  --color-ink-soft: #5c2436;
-  --color-rosewood: #c98374;
-  --color-rosewood-soft: #e3b6ab;
-  --color-brass: #b08d57;
-  --color-sage: #90a189;
-  --color-charcoal: #211a1d;
-  --color-paper-line: rgba(59, 15, 31, 0.12);
+  --color-ground: #1a1016;
+  --color-surface-1: #241820;
+  --color-surface-2: #2e2029;
+  --color-text: #f4eae6;
+  --color-muted-ink: #c3aeb0;
+  --color-coral: #f0937b;
+  --color-brass: #d4a64a;
+  --color-sage: #9dba97;
 
-  --background: var(--color-ivory);
-  --foreground: var(--color-ink);
-  --surface: #ffffff;
-  --accent: var(--color-rosewood);
-  --hairline: var(--color-paper-line);
-  --muted: #8a7268;
+  --background: var(--color-ground);
+  --foreground: var(--color-text);
+  --surface: var(--color-surface-1);
+  --accent: var(--color-coral);
+  --muted: var(--color-muted-ink);
+  --hairline: rgba(244, 234, 230, 0.14);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-ivory: var(--color-ivory);
-  --color-ivory-deep: var(--color-ivory-deep);
-  --color-ink: var(--color-ink);
-  --color-ink-soft: var(--color-ink-soft);
-  --color-rosewood: var(--color-rosewood);
-  --color-rosewood-soft: var(--color-rosewood-soft);
+  --color-surface-2: var(--color-surface-2);
+  --color-ground: var(--color-ground);
+  --color-ink: var(--color-text);
+  --color-coral: var(--color-coral);
   --color-brass: var(--color-brass);
   --color-sage: var(--color-sage);
-  --color-charcoal: var(--color-charcoal);
   --color-accent: var(--accent);
   --color-hairline: var(--hairline);
   --color-muted: var(--muted);
-  --font-display: var(--font-fraunces);
-  --font-sans: var(--font-instrument);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--color-charcoal);
-    --foreground: #f3e9e2;
-    --surface: #2b2226;
-    --accent: var(--color-rosewood-soft);
-    --hairline: rgba(243, 233, 226, 0.14);
-    --muted: #b9a89e;
-  }
+  --font-display: var(--font-bodoni);
+  --font-sans: var(--font-public-sans);
 }
 
 * {
@@ -61,7 +49,8 @@
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
+  background: var(--background);
 }
 
 body {
@@ -73,11 +62,11 @@ body {
 }
 
 ::selection {
-  background: var(--color-rosewood-soft);
-  color: var(--color-ink);
+  background: var(--color-coral);
+  color: var(--color-ground);
 }
 
-/* Filet fin réutilisable — signature "carnet" plutôt que card + shadow */
+/* Filet fin — signature "carnet", jamais d'ombre portée. */
 .hairline {
   border: 1px solid var(--hairline);
 }
@@ -90,7 +79,26 @@ body {
   border-bottom: 1px solid var(--hairline);
 }
 
-/* Chiffres tabulaires pour les scores /10 et dates */
+/* Chiffres tabulaires pour les scores /10, dates et intervalles. */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Focus visible au clavier — jamais supprimé, seulement redessiné. */
+:where(a, button, input, textarea, [role="slider"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Une seule intention d'animation dans toute l'app : la transition d'état
+   des contrôles. Coupée si la personne a demandé moins de mouvement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -5,16 +5,9 @@ import { CardLabel } from "@/components/ui/card";
 import { ScoreSlider } from "@/components/ui/score-slider";
 import { Toggle } from "@/components/ui/toggle";
 import { TagInput } from "@/components/ui/tag-input";
-import {
-  DropletIcon,
-  LeafIcon,
-  MoonIcon,
-  NoteIcon,
-  PillIcon,
-  SparkIcon,
-} from "@/components/icons";
+import { DropletIcon, LeafIcon, MoonIcon, NoteIcon, SparkIcon } from "@/components/icons";
 import { fetchEntry, upsertEntry } from "@/lib/entries-client";
-import { friendlyDate } from "@/lib/date";
+import { dateParts } from "@/lib/date";
 import type { DailyEntryInput } from "@/lib/supabase/types";
 
 type Draft = {
@@ -48,6 +41,7 @@ export function DailyEntryForm({ date }: { date: string }) {
   const [status, setStatus] = useState<"loading" | "idle" | "saving" | "saved">("loading");
   const hydrated = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { day, month, weekday } = dateParts(date);
 
   useEffect(() => {
     hydrated.current = false;
@@ -83,7 +77,12 @@ export function DailyEntryForm({ date }: { date: string }) {
     setStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const payload: DailyEntryInput = { entry_date: date, ...draft, medication_notes: draft.medication_notes || null, notes: draft.notes || null };
+      const payload: DailyEntryInput = {
+        entry_date: date,
+        ...draft,
+        medication_notes: draft.medication_notes || null,
+        notes: draft.notes || null,
+      };
       try {
         await upsertEntry(payload);
         setStatus("saved");
@@ -97,25 +96,34 @@ export function DailyEntryForm({ date }: { date: string }) {
   }, [draft, date]);
 
   return (
-    <div className="flex-1 flex flex-col px-5 pb-10">
-      <div className="flex items-baseline justify-between pt-6 pb-5">
-        <h1 className="font-display italic text-2xl text-foreground">{friendlyDate(date)}</h1>
-        <SaveIndicator status={status} />
-      </div>
-
-      <section className="hairline rounded-2xl bg-surface p-5 mb-4">
-        <CardLabel>Crise</CardLabel>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <SparkIcon className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium">Crise aujourd&apos;hui</span>
-          </div>
-          <Toggle value={draft.had_crisis} onChange={(v) => update("had_crisis", v)} />
+    <div className="flex-1 flex flex-col px-6 pb-12">
+      {/* Date en composition éditoriale : chiffres droits, mois en italique
+          corail — la seule vraie « une » de l'app. */}
+      <header className="pt-7 pb-6 hairline-b">
+        <h1 className="font-display text-[3.9rem] leading-[1.02] tracking-[-0.03em]">
+          <span className="tabular">{day}</span>{" "}
+          <em className="italic text-accent">{month}</em>
+        </h1>
+        <div className="flex items-end justify-between mt-4">
+          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted">{weekday}</p>
+          <SaveIndicator status={status} />
         </div>
+      </header>
+
+      <section className="py-7 hairline-b">
+        <CardLabel>Crise</CardLabel>
+        <Toggle
+          label="Crise aujourd'hui"
+          value={draft.had_crisis}
+          onChange={(v) => update("had_crisis", v)}
+          offLabel="Aucune"
+          onLabel="Crise aujourd'hui"
+        />
         {draft.had_crisis && (
-          <div className="mt-5">
+          <div className="mt-7">
             <ScoreSlider
               label="Intensité"
+              icon={<SparkIcon className="w-4 h-4 text-accent" />}
               value={draft.crisis_intensity}
               onChange={(v) => update("crisis_intensity", v)}
             />
@@ -123,8 +131,8 @@ export function DailyEntryForm({ date }: { date: string }) {
         )}
       </section>
 
-      <section className="hairline rounded-2xl bg-surface p-5 mb-4 flex flex-col gap-6">
-        <CardLabel className="mb-0">Ressenti du jour</CardLabel>
+      <section className="py-7 hairline-b flex flex-col gap-7">
+        <CardLabel className="mb-0">Ressenti</CardLabel>
         <ScoreSlider
           label="Douleur"
           icon={<DropletIcon className="w-4 h-4" />}
@@ -149,28 +157,31 @@ export function DailyEntryForm({ date }: { date: string }) {
         />
       </section>
 
-      <section className="hairline rounded-2xl bg-surface p-5 mb-4">
+      <section className="py-7 hairline-b">
         <CardLabel>Médicament</CardLabel>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <PillIcon className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium">Pris aujourd&apos;hui</span>
-          </div>
-          <Toggle value={draft.medication_taken} onChange={(v) => update("medication_taken", v)} />
-        </div>
+        <Toggle
+          label="Médicament pris"
+          value={draft.medication_taken}
+          onChange={(v) => update("medication_taken", v)}
+          offLabel="Non pris"
+          onLabel="Pris"
+        />
         {draft.medication_taken && (
-          <input
-            value={draft.medication_notes}
-            onChange={(e) => update("medication_notes", e.target.value)}
-            placeholder="Lequel, à quelle heure…"
-            className="mt-4 w-full hairline rounded-xl px-3.5 py-2.5 bg-background outline-none focus:border-accent/60 text-sm"
-          />
+          <label className="block mt-4">
+            <span className="sr-only">Détail du médicament</span>
+            <input
+              value={draft.medication_notes}
+              onChange={(e) => update("medication_notes", e.target.value)}
+              placeholder="Lequel, à quelle heure…"
+              className="w-full hairline rounded-2xl px-4 min-h-[52px] bg-surface outline-none focus:border-accent/60 text-[0.95rem]"
+            />
+          </label>
         )}
       </section>
 
-      <section className="hairline rounded-2xl bg-surface p-5 mb-4">
+      <section className="py-7 hairline-b">
         <CardLabel>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <LeafIcon className="w-3.5 h-3.5" /> Repas &amp; aliments
           </span>
         </CardLabel>
@@ -181,27 +192,36 @@ export function DailyEntryForm({ date }: { date: string }) {
         />
       </section>
 
-      <section className="hairline rounded-2xl bg-surface p-5">
+      <section className="py-7">
         <CardLabel>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <NoteIcon className="w-3.5 h-3.5" /> Notes
           </span>
         </CardLabel>
-        <textarea
-          value={draft.notes}
-          onChange={(e) => update("notes", e.target.value)}
-          placeholder="Ce qui vaut la peine d'être noté…"
-          rows={3}
-          className="w-full bg-transparent outline-none text-sm resize-none placeholder:text-muted/70"
-        />
+        <label>
+          <span className="sr-only">Notes libres</span>
+          <textarea
+            value={draft.notes}
+            onChange={(e) => update("notes", e.target.value)}
+            placeholder="Ce qui vaut la peine d'être noté…"
+            rows={4}
+            className="w-full hairline rounded-2xl bg-surface p-4 outline-none focus:border-accent/60 text-[0.95rem] resize-none placeholder:text-muted/70"
+          />
+        </label>
       </section>
+
+      <p className="text-[0.75rem] text-muted">
+        Tout est enregistré au fil de la saisie, rien à valider.
+      </p>
     </div>
   );
 }
 
 function SaveIndicator({ status }: { status: "loading" | "idle" | "saving" | "saved" }) {
-  if (status === "loading") return null;
   const label = status === "saving" ? "Enregistrement…" : status === "saved" ? "Enregistré" : "";
-  if (!label) return <span className="h-[1em]" />;
-  return <span className="text-xs text-muted tabular">{label}</span>;
+  return (
+    <span aria-live="polite" className="text-[0.75rem] text-muted min-h-[1em]">
+      {label}
+    </span>
+  );
 }

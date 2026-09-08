@@ -97,7 +97,12 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
     énergie, médicament, aliments (`text[]`), notes.
   - RLS activé sur les deux tables, policies `auth.uid() = user_id` /
     `auth.uid() = id` — comptes strictement privés.
-- **Auth** : `@supabase/ssr`, cookies HTTP-only, session rafraîchie dans
+- **Auth** : `@supabase/ssr`, session en cookies (⚠️ **pas** `HttpOnly` :
+  `@supabase/ssr` les pose en `httpOnly: false` par conception, car
+  `createBrowserClient` doit lire la session depuis `document.cookie` pour
+  la couche de données côté client — c'est inhérent à la librairie, pas un
+  oubli ; sans faille XSS dans l'app, il n'y a pas de chemin d'exploitation,
+  mais ne pas le documenter à tort comme HttpOnly), rafraîchie dans
   `src/proxy.ts` (le fichier `middleware.ts` a été renommé `proxy.ts` —
   convention Next.js 16). Redirige vers `/connexion` si non connecté,
   vers `/aujourdhui` si déjà connecté sur les pages d'auth.

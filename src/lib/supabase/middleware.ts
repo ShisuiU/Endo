@@ -34,16 +34,26 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
-  if (!user && !isPublic && pathname !== "/") {
+  // `getUser()` peut avoir renouvelé la session : les cookies rafraîchis sont
+  // posés sur `response`. Une redirection crée une réponse neuve, il faut donc
+  // les recopier — sinon le navigateur garde l'ancien refresh token, que
+  // Supabase a déjà consommé (rotation), et la session saute au hasard.
+  const redirectTo = (target: string) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/connexion";
-    return NextResponse.redirect(url);
+    url.pathname = target;
+    const redirect = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    return redirect;
+  };
+
+  if (!user && !isPublic && pathname !== "/") {
+    return redirectTo("/connexion");
   }
 
   if (user && (pathname === "/connexion" || pathname === "/inscription")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/aujourdhui";
-    return NextResponse.redirect(url);
+    return redirectTo("/aujourdhui");
   }
 
   return response;

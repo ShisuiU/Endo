@@ -45,6 +45,36 @@ déjà, il le réutilise.
 > ce sont les policies RLS qui protègent les données, pas le secret de la clé.
 > Ne jamais mettre la clé `service_role` dans le front.
 
+## Déployer sur Vercel
+
+Le palier gratuit (Hobby) suffit largement pour un usage perso.
+
+```bash
+npx vercel deploy --prod --token=<TOKEN> --yes
+```
+
+Les deux variables Supabase doivent être définies **côté projet Vercel**
+(`.env.local` n'est jamais envoyé) :
+
+```bash
+npx vercel env add NEXT_PUBLIC_SUPABASE_URL production --token=<TOKEN>
+npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production --token=<TOKEN>
+```
+
+**Après le premier déploiement**, passer `site_url` sur l'URL de
+production dans Supabase (Authentication → URL Configuration), sinon les
+liens des emails d'auth pointeront vers `localhost:3000` :
+
+```bash
+curl -X PATCH "https://api.supabase.com/v1/projects/ztucdcyfeqaeeogzjzeo/config/auth" \
+  -H "Authorization: Bearer <SUPABASE_TOKEN>" -H "Content-Type: application/json" \
+  -d '{"site_url": "https://<domaine-vercel>"}'
+```
+
+> HTTPS est obligatoire pour qu'une PWA s'installe sur iPhone et pour que
+> le service worker s'enregistre. Vercel le fournit d'office, y compris
+> sur les domaines `*.vercel.app`.
+
 ## Regénérer les icônes / splash screens
 
 ```bash

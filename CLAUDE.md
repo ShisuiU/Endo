@@ -78,13 +78,19 @@ les clichés pastel/lavande ni dans l'esthétique "IA générique"
     appliquée, schéma vérifié en production. Les clés sont dans
     `.env.local` (non versionné) — la clé `anon` est publique par
     conception, c'est la RLS qui protège.
-  - **Deux réglages à connaître** côté dashboard Supabase :
-    `mailer_autoconfirm` est à `false` (confirmation email exigée) alors
-    que le SMTP intégré est limité à 2 emails/heure et réservé au test —
-    à basculer, ou brancher un vrai SMTP, avant usage réel. Et `site_url`
-    vaut encore `http://localhost:3000` : à passer sur l'URL de
-    production au moment du déploiement, sinon les liens des emails
-    d'auth pointeront vers localhost.
+  - **Confirmation par email désactivée** (`mailer_autoconfirm: true`,
+    choix validé avec l'utilisateur) : l'inscription ouvre une session
+    immédiatement, sans email à cliquer. C'était nécessaire parce que le
+    SMTP intégré de Supabase est limité à 2 emails/heure et réservé au
+    test — les emails de confirmation ne seraient pas arrivés. Vérifié en
+    conditions réelles : `signUp` renvoie bien une session et l'écriture
+    en base fonctionne dans la foulée. Si un jour tu veux rétablir la
+    vérification d'adresse, il faut d'abord brancher un vrai SMTP
+    (Resend a un palier gratuit) puis repasser le réglage à `false`.
+  - **`site_url` vaut encore `http://localhost:3000`** : à passer sur
+    l'URL de production au moment du déploiement, sinon les liens des
+    emails d'auth (réinitialisation de mot de passe notamment)
+    pointeront vers localhost.
   - `profiles` — un profil léger par utilisateur (créé automatiquement à
     l'inscription via trigger `handle_new_user`).
   - `daily_entries` — une ligne par jour et par utilisateur (`unique
@@ -261,6 +267,9 @@ ressembler à un site généré par IA.**
   rien), et toutes les fonctions de `entries-client.ts` (fetchEntry,
   fetchEntriesInRange, fetchAllCrisisDates, upsertEntry) testées contre
   la vraie base. Données de test supprimées ensuite.
+- Confirmation par email désactivée puis **inscription revérifiée de bout
+  en bout** : session ouverte immédiatement, écriture en base dans la
+  foulée. Comptes de test supprimés, base laissée vide.
 - **Deux plantages corrigés**, trouvés en faisant tourner l'app pour de
   vrai (ils n'apparaissaient ni au build, ni au typecheck, ni au lint) :
   1. `/statistiques` tombait en 500 à chaque ouverture — `friendlyDate`
@@ -271,10 +280,8 @@ ressembler à un site généré par IA.**
      `isValidISODate()` dans `src/lib/date.ts` et d'un `notFound()`.
 
 **Reste à faire :**
-- Trancher la question de la confirmation par email (voir § Architecture,
-  `mailer_autoconfirm`) : soit la désactiver pour un usage perso, soit
-  brancher un SMTP réel (Resend a un palier gratuit) — en l'état, le SMTP
-  intégré de Supabase ne délivrera pas de façon fiable.
+- Passer `site_url` sur l'URL de production au moment du déploiement
+  (voir § Architecture).
 - Déployer (Vercel recommandé, gratuit pour un usage perso) pour tester
   l'installation réelle sur iPhone — non fait dans cette session car
   aucun compte de déploiement n'était disponible.

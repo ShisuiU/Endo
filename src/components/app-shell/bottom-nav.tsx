@@ -20,16 +20,26 @@ import { cn } from "@/lib/cn";
  * Deux points de géométrie, appris à l'usage :
  *
  *  1. **Les trois emplacements font exactement le même tiers de la barre**
- *     (`flex-1 min-w-0`), et la pastille se contente de déborder du sien.
- *     Une première version élargissait l'onglet actif : les icônes voisines
- *     se décalaient d'un coup, en CSS, pendant que la pastille glissait, elle,
- *     sur un ressort — deux mouvements désaccordés. Ici rien ne bouge sauf la
- *     pastille.
+ *     (`flex-1 min-w-0`), et la pastille occupe précisément le sien
+ *     (`absolute inset-0`). Deux versions ont échoué avant : l'une
+ *     élargissait l'onglet actif — les icônes voisines sautaient d'un coup en
+ *     CSS pendant que la pastille glissait sur un ressort ; l'autre laissait
+ *     la pastille s'ajuster à son libellé — elle débordait alors de la
+ *     capsule, visiblement, dans le coin arrondi. À taille fixe, la pastille
+ *     ne fait plus que se translater : elle reste dedans (les deux tracés
+ *     sont concentriques, 6 px d'écart partout) et l'animation est un simple
+ *     déplacement.
  *  2. **La pastille suit l'appui, pas le serveur.** Les écrans sont rendus
  *     dynamiquement : un changement d'onglet demande un aller-retour de 400 à
  *     900 ms. Attendre `usePathname` pour déplacer la pastille rendait la
  *     barre inerte pendant tout ce temps. On note la destination à l'appui,
  *     et la vraie route reprend la main dès qu'elle arrive.
+ *
+ *  3. **Pas de `backdrop-blur` sur la capsule.** Un fond flouté qui se
+ *     recalcule à chaque image pendant qu'un libellé s'ouvre au-dessus, c'est
+ *     ce qui rendait le texte saccadé sur iPhone — Safari repeint toute la
+ *     zone floutée à chaque frame. La capsule est opaque ; le dégradé du
+ *     conteneur suffit à décoller le contenu qui passe derrière.
  *
  * Le reste : cibles de 56 px, capsule `sticky` (elle garde sa place dans le
  * flux, donc ne recouvre jamais la fin du formulaire), libellé visible en
@@ -64,12 +74,12 @@ export function BottomNav() {
 
   return (
     <div
-      className="sticky bottom-0 z-30 px-4 pt-8 bg-gradient-to-t from-background via-background to-transparent"
+      className="sticky bottom-0 z-30 px-3 pt-8 bg-gradient-to-t from-background via-background to-transparent"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <nav
         aria-label="Navigation principale"
-        className="mx-auto flex w-full max-w-[22rem] items-center rounded-full hairline bg-surface/80 p-1.5 backdrop-blur"
+        className="mx-auto flex w-full max-w-[24rem] items-center rounded-full hairline bg-surface p-1.5"
       >
         {ITEMS.map(({ href, label, Icon }) => {
           const on = active === href;
@@ -81,19 +91,19 @@ export function BottomNav() {
               aria-current={on ? "page" : undefined}
               onClick={() => setTapped(href)}
               className={cn(
-                "flex min-h-[56px] min-w-0 flex-1 items-center justify-center rounded-full transition-colors duration-200",
+                "relative flex min-h-[56px] min-w-0 flex-1 items-center justify-center rounded-full transition-colors duration-200",
                 on ? "text-accent" : "text-muted hover:text-foreground"
               )}
             >
-              <motion.span
-                layout
-                layoutId={on ? "nav-pill" : undefined}
-                transition={transition}
-                className={cn(
-                  "flex min-h-[48px] items-center justify-center gap-2 rounded-full px-4",
-                  on && "bg-surface-2 hairline"
-                )}
-              >
+              {on && (
+                <motion.span
+                  layoutId="nav-pill"
+                  aria-hidden
+                  transition={transition}
+                  className="absolute inset-0 rounded-full bg-surface-2 hairline"
+                />
+              )}
+              <span className="relative flex min-w-0 items-center justify-center gap-1.5 px-1">
                 <Icon className="w-5 h-5 shrink-0" />
                 <AnimatePresence initial={false}>
                   {on && (
@@ -104,13 +114,13 @@ export function BottomNav() {
                       animate={{ width: "auto", opacity: 1 }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={transition}
-                      className="overflow-hidden whitespace-nowrap text-[0.85rem]"
+                      className="overflow-hidden whitespace-nowrap text-[0.8rem]"
                     >
                       {label}
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </motion.span>
+              </span>
             </Link>
           );
         })}

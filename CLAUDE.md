@@ -87,15 +87,25 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
   ou repliées.
   **Deux points de géométrie appris à l'usage, à ne pas défaire :**
   1. Les trois emplacements font exactement le même tiers de la barre
-     (`flex-1 min-w-0`) et la pastille déborde du sien. Une première
-     version élargissait l'onglet actif : les icônes voisines sautaient
-     d'un coup, en CSS, pendant que la pastille glissait sur un ressort —
-     deux mouvements désaccordés, signalés par l'utilisatrice. Tout part
-     maintenant du même ressort, et un onglet non concerné ne bouge pas
-     d'un pixel (vérifié : 0 px).
+     (`flex-1 min-w-0`) et la pastille occupe précisément le sien
+     (`absolute inset-0`). Deux versions ont échoué avant, toutes deux
+     signalées par l'utilisatrice : l'une élargissait l'onglet actif — les
+     icônes voisines sautaient d'un coup en CSS pendant que la pastille
+     glissait sur un ressort ; l'autre laissait la pastille s'ajuster à son
+     libellé — elle **débordait de la capsule** dans le coin arrondi. À
+     taille fixe la pastille ne fait plus que se translater : les deux
+     tracés sont concentriques (6 px d'écart partout) et un onglet non
+     concerné ne bouge pas d'un pixel. Vérifié à 375, 390 et 430 px de
+     large : pastille dans la capsule et libellé dans la pastille, sur les
+     trois onglets.
   2. La pastille suit l'appui, pas le serveur (`tapped` optimiste, la
      route reprend la main à son arrivée) : 128 ms de réaction au lieu
      d'attendre l'aller-retour.
+  3. **Pas de `backdrop-blur` sur la capsule.** Un fond flouté qui se
+     recalcule à chaque image pendant qu'un libellé s'ouvre au-dessus,
+     c'est ce qui rendait le texte saccadé sur iPhone — Safari repeint
+     toute la zone floutée à chaque frame. La capsule est opaque, le
+     dégradé du conteneur suffit à décoller le contenu qui passe derrière.
 - Micro-interactions : sauvegarde automatique silencieuse mais **jamais
   muette en cas d'échec** (voir § Sauvegarde), transitions d'état des
   contrôles. `prefers-reduced-motion` coupe tout globalement, y compris

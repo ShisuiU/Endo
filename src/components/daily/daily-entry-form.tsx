@@ -2,11 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CardLabel } from "@/components/ui/card";
-import { ScoreSlider } from "@/components/ui/score-slider";
-import { ScoreWizard, type ScoreStep } from "@/components/daily/score-wizard";
-import { Toggle } from "@/components/ui/toggle";
-import { TagInput } from "@/components/ui/tag-input";
-import { ChevronRightIcon, LeafIcon, NoteIcon, SparkIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import { DayWizard, type WizardStep } from "@/components/daily/day-wizard";
+import { DaySummary, type SummaryItem } from "@/components/daily/day-summary";
 import { currentUserId, fetchEntry, upsertEntry } from "@/lib/entries-client";
 import {
   claimDate,
@@ -16,7 +14,6 @@ import {
   writePending,
 } from "@/lib/pending-entries";
 import { dateParts } from "@/lib/date";
-import { cn } from "@/lib/cn";
 import type { DailyEntry, DailyEntryInput } from "@/lib/supabase/types";
 
 type Draft = {
@@ -46,6 +43,13 @@ const EMPTY_DRAFT: Draft = {
   foods: [],
   notes: "",
 };
+
+const SCORES = [
+  { key: "pain_score", label: "Douleur" },
+  { key: "sleep_score", label: "Sommeil" },
+  { key: "mood_score", label: "Humeur" },
+  { key: "energy_score", label: "Énergie" },
+] as const;
 
 function draftFromEntry(entry: DailyEntry): Draft {
   return {
@@ -81,25 +85,17 @@ function toPayload(date: string, draft: Draft): DailyEntryInput {
   };
 }
 
-/**
- * Les quatre notes de la journée, dans l'ordre où on les demande : ce qui
- * fait mal d'abord, ce qui répare ensuite.
- */
-const SCORES = [
-  { key: "pain_score", label: "Douleur", hint: "0 : rien. 10 : la pire que tu connaisses." },
-  { key: "sleep_score", label: "Sommeil", hint: "La nuit qui vient de passer, pas la fatigue du jour." },
-  { key: "mood_score", label: "Humeur", hint: "Le moral, indépendamment de la douleur." },
-  { key: "energy_score", label: "Énergie", hint: "Ce que tu as pu faire aujourd'hui." },
-] as const satisfies readonly { key: keyof Draft; label: string; hint: string }[];
-
 /** Empreinte du brouillon, pour ne rien envoyer qui n'a pas bougé. */
 const fingerprint = (draft: Draft) => JSON.stringify(draft);
+
+/** La journée a-t-elle été touchée ? Sert à choisir le libellé du bouton. */
+const isBlank = (draft: Draft) => fingerprint(draft) === fingerprint(EMPTY_DRAFT);
 
 export function DailyEntryForm({ date }: { date: string }) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [status, setStatus] = useState<Status>("loading");
   const [retry, setRetry] = useState(0);
-  /** Index de la question ouverte dans l'assistant, `null` s'il est fermé. */
+  /** Index de la question ouverte dans le parcours, `null` s'il est fermé. */
   const [wizardAt, setWizardAt] = useState<number | null>(null);
   const hydrated = useRef(false);
   const userId = useRef<string | null>(null);
@@ -151,12 +147,7 @@ export function DailyEntryForm({ date }: { date: string }) {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  // Stables : le dialogue d'évaluation les prend en dépendance d'effet.
   const closeWizard = useCallback(() => setWizardAt(null), []);
-  const setScore = useCallback(
-    (key: string, value: number) => update(key as keyof Draft, value as Draft[keyof Draft]),
-    [update]
-  );
 
   useEffect(() => {
     if (!hydrated.current) return;
@@ -185,13 +176,6 @@ export function DailyEntryForm({ date }: { date: string }) {
     };
   }, [draft, date, retry]);
 
-  const answered = SCORES.filter(({ key }) => draft[key] !== null).length;
-  // On rouvre là où il reste à répondre, pas systématiquement au début.
-  const firstUnanswered = Math.max(
-    SCORES.findIndex(({ key }) => draft[key] === null),
-    0
-  );
-
   const retryNow = useCallback(() => setRetry((n) => n + 1), []);
 
   // Le retour du réseau relance l'envoi sans rien demander.
@@ -199,6 +183,150 @@ export function DailyEntryForm({ date }: { date: string }) {
     window.addEventListener("online", retryNow);
     return () => window.removeEventListener("online", retryNow);
   }, [retryNow]);
+
+  // Le parcours entier : les questions sans objet (intensité sans crise)
+  // disparaissent d'elles-mêmes, et la numérotation suit.
+  const steps: WizardStep[] = [
+    {
+      id: "crisis",
+      kind: "toggle",
+      title: "Crise",
+      hint: "Une crise aujourd'hui, même courte ?",
+      value: draft.had_crisis,
+      offLabel: "Aucune",
+      onLabel: "Oui",
+      onChange: (v) => update("had_crisis", v),
+    },
+    ...(draft.had_crisis
+      ? [
+          {
+            id: "intensity",
+            kind: "score" as const,
+            title: "Intensité",
+            hint: "À quel point la crise a été forte.",
+            value: draft.crisis_intensity,
+            onChange: (v: number) => update("crisis_intensity", v),
+          },
+        ]
+      : []),
+    {
+      id: "pain",
+      kind: "score",
+      title: "Douleur",
+      hint: "0 : rien. 10 : la pire que tu connaisses.",
+      value: draft.pain_score,
+      onChange: (v) => update("pain_score", v),
+    },
+    {
+      id: "sleep",
+      kind: "score",
+      title: "Sommeil",
+      hint: "La nuit qui vient de passer, pas la fatigue du jour.",
+      value: draft.sleep_score,
+      onChange: (v) => update("sleep_score", v),
+    },
+    {
+      id: "mood",
+      kind: "score",
+      title: "Humeur",
+      hint: "Le moral, indépendamment de la douleur.",
+      value: draft.mood_score,
+      onChange: (v) => update("mood_score", v),
+    },
+    {
+      id: "energy",
+      kind: "score",
+      title: "Énergie",
+      hint: "Ce que tu as pu faire aujourd'hui.",
+      value: draft.energy_score,
+      onChange: (v) => update("energy_score", v),
+    },
+    {
+      id: "medication",
+      kind: "toggle",
+      title: "Médicament",
+      hint: "Un médicament pris pour la douleur ?",
+      value: draft.medication_taken,
+      offLabel: "Non pris",
+      onLabel: "Pris",
+      onChange: (v) => update("medication_taken", v),
+      detail: {
+        value: draft.medication_notes,
+        placeholder: "Lequel, à quelle heure…",
+        onChange: (v) => update("medication_notes", v),
+      },
+    },
+    {
+      id: "foods",
+      kind: "tags",
+      title: "Repas",
+      hint: "Ce que tu as mangé, si tu veux pouvoir le relier à tes crises.",
+      values: draft.foods,
+      placeholder: "Ajouter un aliment…",
+      onChange: (v) => update("foods", v),
+    },
+    {
+      id: "notes",
+      kind: "text",
+      title: "Notes",
+      hint: "Ce qui vaut la peine d'être noté et qui n'entre dans aucune case.",
+      value: draft.notes,
+      placeholder: "Ce que tu veux retenir de cette journée…",
+      onChange: (v) => update("notes", v),
+    },
+  ];
+
+  const at = (id: string) => steps.findIndex((s) => s.id === id);
+  // On reprend là où il reste à répondre, pas systématiquement au début.
+  const firstUnanswered = Math.max(
+    steps.findIndex((s) => s.kind === "score" && s.value === null),
+    0
+  );
+
+  // L'ordre du résumé est celui du parcours : on relit comme on a répondu.
+  const items: SummaryItem[] = [
+    {
+      kind: "row",
+      step: at("crisis"),
+      label: "Crise",
+      value: draft.had_crisis
+        ? draft.crisis_intensity === null
+          ? "Oui"
+          : `Oui — intensité ${draft.crisis_intensity}/10`
+        : "Aucune",
+      accent: draft.had_crisis,
+    },
+    {
+      kind: "scores",
+      step: at("pain"),
+      scores: SCORES.map(({ key, label }) => ({ key, label, value: draft[key] })),
+    },
+    {
+      kind: "row",
+      step: at("medication"),
+      label: "Médicament",
+      value: draft.medication_taken ? draft.medication_notes || "Pris" : "Non pris",
+    },
+    {
+      kind: "row",
+      step: at("foods"),
+      label: "Repas",
+      value: draft.foods.length > 0 ? draft.foods.join(", ") : "Rien de noté",
+      empty: draft.foods.length === 0,
+    },
+    {
+      kind: "row",
+      step: at("notes"),
+      label: "Notes",
+      value: draft.notes || "Rien de noté",
+      empty: draft.notes === "",
+    },
+  ];
+
+  // « Compléter » tant qu'une note manque, « Revoir » quand tout est répondu.
+  const complete = steps.every((s) => s.kind !== "score" || s.value !== null);
+
+  const blank = isBlank(draft);
 
   return (
     <div className="flex-1 flex flex-col px-6 pb-12">
@@ -215,133 +343,27 @@ export function DailyEntryForm({ date }: { date: string }) {
         </div>
       </header>
 
-      <section className="py-7 hairline-b">
-        <CardLabel>Crise</CardLabel>
-        <Toggle
-          label="Crise aujourd'hui"
-          value={draft.had_crisis}
-          onChange={(v) => update("had_crisis", v)}
-          offLabel="Aucune"
-          onLabel="Crise aujourd'hui"
-        />
-        {draft.had_crisis && (
-          <div className="mt-7">
-            <ScoreSlider
-              label="Intensité"
-              icon={<SparkIcon className="w-4 h-4 text-accent" />}
-              value={draft.crisis_intensity}
-              onChange={(v) => update("crisis_intensity", v)}
-            />
+      <section className="py-7">
+        <CardLabel>{blank ? "La journée" : "Résumé du jour"}</CardLabel>
+
+        {blank ? (
+          <p className="mb-5 text-[0.9rem] leading-relaxed text-muted">
+            Crise, douleur, sommeil, humeur, énergie, médicament, repas — une
+            question à la fois, rien d&apos;obligatoire.
+          </p>
+        ) : (
+          <div className="mb-5">
+            <DaySummary items={items} onOpen={setWizardAt} />
           </div>
         )}
-      </section>
 
-      {/* Les quatre notes ne sont plus empilées ici : elles se remplissent une
-          par écran (voir `ScoreWizard`). Ce bloc ne garde que ce qu'on veut
-          voir d'un coup d'œil — ce qui est déjà noté — et sert de porte
-          d'entrée. */}
-      <section className="py-7 hairline-b">
-        <CardLabel>Ressenti</CardLabel>
-        <button
-          type="button"
-          onClick={() => setWizardAt(firstUnanswered)}
-          className="w-full hairline rounded-2xl bg-surface px-5 py-4 min-h-[56px] flex items-center gap-4 text-left transition-colors hover:bg-surface-2"
-        >
-          {answered === 0 ? (
-            <span className="flex-1">
-              <span className="block text-[0.95rem]">Évaluer la journée</span>
-              <span className="mt-1 block text-[0.78rem] text-muted">
-                Douleur, sommeil, humeur, énergie — une question à la fois.
-              </span>
-            </span>
-          ) : (
-            <span className="flex-1 grid grid-cols-4 gap-2">
-              {SCORES.map(({ key, label }) => (
-                <span key={key} className="block">
-                  <span className="block text-[0.6rem] uppercase tracking-[0.14em] text-muted">
-                    {label}
-                  </span>
-                  <span
-                    className={cn(
-                      "mt-1 block font-display italic text-[1.5rem] leading-none tabular",
-                      draft[key] === null ? "text-muted/45" : "text-accent"
-                    )}
-                  >
-                    {draft[key] ?? "–"}
-                  </span>
-                </span>
-              ))}
-            </span>
-          )}
-          <ChevronRightIcon className="w-5 h-5 shrink-0 text-muted" aria-hidden />
-        </button>
-      </section>
-
-      <section className="py-7 hairline-b">
-        <CardLabel>Médicament</CardLabel>
-        <Toggle
-          label="Médicament pris"
-          value={draft.medication_taken}
-          onChange={(v) => update("medication_taken", v)}
-          offLabel="Non pris"
-          onLabel="Pris"
-        />
-        {draft.medication_taken && (
-          <label className="block mt-4">
-            <span className="sr-only">Détail du médicament</span>
-            <input
-              value={draft.medication_notes}
-              onChange={(e) => update("medication_notes", e.target.value)}
-              placeholder="Lequel, à quelle heure…"
-              className="w-full hairline rounded-2xl px-4 min-h-[52px] bg-surface outline-none focus:border-accent/60 text-[0.95rem]"
-            />
-          </label>
-        )}
-      </section>
-
-      <section className="py-7 hairline-b">
-        <CardLabel>
-          <span className="inline-flex items-center gap-2">
-            <LeafIcon className="w-3.5 h-3.5" /> Repas &amp; aliments
-          </span>
-        </CardLabel>
-        <TagInput
-          values={draft.foods}
-          onChange={(v) => update("foods", v)}
-          placeholder="Ajouter un aliment…"
-        />
-      </section>
-
-      <section className="py-7">
-        <CardLabel>
-          <span className="inline-flex items-center gap-2">
-            <NoteIcon className="w-3.5 h-3.5" /> Notes
-          </span>
-        </CardLabel>
-        <label>
-          <span className="sr-only">Notes libres</span>
-          <textarea
-            value={draft.notes}
-            onChange={(e) => update("notes", e.target.value)}
-            placeholder="Ce qui vaut la peine d'être noté…"
-            rows={4}
-            className="w-full hairline rounded-2xl bg-surface p-4 outline-none focus:border-accent/60 text-[0.95rem] resize-none placeholder:text-muted/70"
-          />
-        </label>
+        <Button className="w-full" onClick={() => setWizardAt(blank ? 0 : firstUnanswered)}>
+          {blank ? "Évaluer la journée" : complete ? "Revoir la journée" : "Compléter la journée"}
+        </Button>
       </section>
 
       {wizardAt !== null && (
-        <ScoreWizard
-          steps={SCORES.map(({ key, label, hint }): ScoreStep => ({
-            key,
-            label,
-            hint,
-            value: draft[key] as number | null,
-          }))}
-          startAt={wizardAt}
-          onChange={setScore}
-          onClose={closeWizard}
-        />
+        <DayWizard steps={steps} startAt={wizardAt} onClose={closeWizard} />
       )}
 
       {status === "error" ? (

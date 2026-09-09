@@ -183,8 +183,9 @@ toute première direction, n'existe plus que dans l'historique Git.
   src/components/
     ui/            — Button, Card, ScoreSlider, Toggle, TagInput, Wordmark
     icons.tsx       — set d'icônes maison
-    daily/          — formulaire de saisie quotidienne (réutilisé par /accueil et /jour/[date])
-                      + ScoreWizard (les quatre notes, une par écran)
+    daily/          — DayWizard (la journée, une question par écran),
+                      DaySummary (le résumé de l'accueil), DailyEntryForm
+                      (état + sauvegarde, réutilisé par /accueil et /jour/[date])
     calendar/       — grille mensuelle
     stats/          — courbes de tendance dessinées à la main
     pwa/            — enregistrement du service worker, invite iOS "à l'écran d'accueil"
@@ -353,33 +354,50 @@ peser — ne pas le faire à la légère (l'app ne lit aucune donnée côté
 serveur, tout passe par la RLS côté client, donc le risque est faible, mais
 ça mérite d'être décidé, pas subi).
 
-## Évaluer la journée — les notes, une par écran
+## La journée entière, une question par écran
 
-L'écran d'accueil empilait quatre réglettes (douleur, sommeil, humeur,
-énergie) : quatre questions à tenir en tête d'un coup, et une page longue
-avant d'arriver au reste. À la demande de l'utilisatrice, elles sont passées
-derrière **un seul bouton**, et se remplissent une par écran avec
-« Suivant » (`src/components/daily/score-wizard.tsx`).
+L'écran d'accueil était un long formulaire : crise, intensité, quatre notes,
+médicament, aliments, notes libres, tout empilé. Il fallait décider soi-même
+par où commencer, et la page se déroulait sans fin. À la demande de
+l'utilisatrice, **tout est passé derrière un seul bouton**
+(`src/components/daily/day-wizard.tsx`), et l'accueil ne montre plus que le
+**résumé du jour** (`src/components/daily/day-summary.tsx`).
 
-- Le bloc « Ressenti » de l'accueil ne garde que ce qui se lit d'un coup
-  d'œil : « Évaluer la journée » tant que rien n'est noté, sinon les quatre
-  notes en résumé. Le bloc entier est le bouton (98 px de haut).
-- Rouvrir repart **à la première question sans réponse**, pas au début.
-- Chaque note part vers le brouillon dès qu'elle bouge, pas à la fin : on
-  peut fermer au milieu sans rien perdre — ce qui compte quand on abandonne
-  parce que la douleur reprend. « Suivant » n'exige rien, une note peut
-  rester vide (« non renseigné », pas zéro).
-- L'animation entre questions ne touche qu'`opacity` et `transform`, jamais
-  la géométrie (leçon de la barre de navigation), et disparaît sous
-  `prefers-reduced-motion`.
+Le parcours, dans l'ordre : crise → [intensité] → douleur → sommeil →
+humeur → énergie → médicament (+ détail) → repas → notes. Huit questions,
+neuf s'il y a eu une crise.
+
+Trois règles tiennent le parcours :
+- **rien n'est obligatoire** — « Suivant » avance toujours, une note peut
+  rester vide (« non renseigné », jamais zéro) ;
+- **chaque réponse part vers le brouillon tout de suite**, pas à la fin : on
+  peut fermer au milieu sans rien perdre, ce qui compte quand on abandonne
+  parce que la douleur reprend ;
+- **les questions sans objet disparaissent** — pas d'intensité sans crise,
+  pas de détail de médicament sans médicament. La liste des étapes est
+  recalculée à chaque réponse, et le compteur suit (1/8 ↔ 1/9). L'index
+  courant est borné (`safeIndex`) : répondre « non » à la crise pourrait
+  sinon pointer au-delà de la liste.
+
+L'accueil ne sert plus à saisir, mais à **relire** : le résumé reprend
+l'ordre du parcours (crise, les quatre notes en chiffres, médicament, repas,
+notes) et **chaque ligne est tapable** — elle ouvre le parcours directement à
+sa question, pour corriger sans repasser par le reste. Tant que la journée
+est vierge, le résumé laisse place à une simple invitation. Le bouton dit ce
+qu'il fait : « Évaluer la journée » / « Compléter la journée » (une note
+manque) / « Revoir la journée ».
 
 ⚠️ **Piège rencontré, à ne pas réintroduire** : l'effet qui donne le focus au
 dialogue partageait ses dépendances avec l'écouteur d'Échap, donc `onClose` —
 une fonction recréée à chaque rendu du parent. Il se rejouait à **chaque
-note saisie** et reprenait le focus : au clavier, une seule flèche était
-prise en compte, les suivantes tombaient dans le vide. Le focus a maintenant
-son propre effet monté une seule fois, et le parent passe des callbacks
-stables (`useCallback`). Trouvé en testant, invisible au build et au lint.
+réponse** et reprenait le focus : au clavier, une seule flèche était prise en
+compte, les suivantes tombaient dans le vide. Le focus a maintenant son
+propre effet monté une seule fois, et le parent passe des callbacks stables
+(`useCallback`). Trouvé en testant, invisible au build et au lint.
+
+L'animation entre questions ne touche qu'`opacity` et `transform`, jamais la
+géométrie (leçon de la barre de navigation), et disparaît sous
+`prefers-reduced-motion`.
 
 **Renommage `/aujourdhui` → `/accueil`** : l'onglet et la route s'appellent
 désormais « Accueil ». Deux précautions pour ne pas casser une app déjà
@@ -523,9 +541,11 @@ ressembler à un site généré par IA.**
   le préchargement, pastille optimiste, emplacements de largeur fixe.
   6 assertions Playwright (avec latence serveur simulée).
 
-- **Notes de la journée en parcours pas à pas** (`ScoreWizard`) et onglet
+- **Journée entière en parcours pas à pas** (`DayWizard`) : crise,
+  intensité, les quatre notes, médicament, repas, notes libres. L'accueil est
+  devenu un résumé relisible dont chaque ligne rouvre sa question. Onglet
   « Aujourd'hui » renommé « Accueil », avec redirection de l'ancienne route.
-  15 assertions Playwright au vert.
+  23 assertions Playwright au vert.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

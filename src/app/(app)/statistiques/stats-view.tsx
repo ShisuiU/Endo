@@ -74,11 +74,19 @@ export function StatsView() {
               </p>
             )}
 
+            {/* Ces deux chiffres étaient posés dans deux vignettes côte à
+                côte — le motif de tableau de bord qu'on trouve partout, et
+                que ce projet s'interdit. Ils sont écrits, avec les nombres
+                composés comme les dates et les scores : en Bodoni, dans la
+                phrase. */}
             {stats.averageLength !== null && (
-              <dl className="mt-8 grid grid-cols-2 gap-4">
-                <Figure value={`${stats.averageLength} j`} label="Durée d'une crise" />
-                <Figure value={`${medicatedDays} j`} label={`Médicament sur ${WINDOW_DAYS} j`} />
-              </dl>
+              <p className="mt-9 text-[0.95rem] leading-[2.4] text-muted">
+                Une crise dure <Nombre>{stats.averageLength}</Nombre> jour
+                {stats.averageLength > 1 ? "s" : ""} en moyenne.
+                <br />
+                Médicament pris <Nombre>{medicatedDays}</Nombre> jour
+                {medicatedDays > 1 ? "s" : ""} sur les {WINDOW_DAYS} derniers.
+              </p>
             )}
           </>
         )}
@@ -99,16 +107,18 @@ export function StatsView() {
   );
 }
 
-/** Un chiffre et sa légende — même traitement typographique que les scores. */
-function Figure({ value, label }: { value: string; label: string }) {
+/**
+ * Un nombre dans le fil du texte, composé comme les dates et les scores.
+ *
+ * En couleur de texte, pas en corail : l'accent est déjà pris par
+ * l'intervalle entre crises, juste au-dessus. Trois nombres coraux dans la
+ * même section et plus aucun ne ressort — c'est la taille et la police qui
+ * font la hiérarchie ici, pas la couleur.
+ */
+function Nombre({ children }: { children: React.ReactNode }) {
   return (
-    // Le chiffre d'abord : un libellé qui passe à la ligne décalerait
-    // sinon les deux nombres l'un par rapport à l'autre.
-    <div className="hairline rounded-2xl bg-surface px-4 py-3.5">
-      <dd className="font-display italic text-[1.7rem] leading-none text-accent tabular">
-        {value}
-      </dd>
-      <dt className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-muted">{label}</dt>
-    </div>
+    <span className="font-display italic text-[1.6rem] leading-none text-foreground tabular">
+      {children}
+    </span>
   );
 }

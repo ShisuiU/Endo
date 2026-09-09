@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CardLabel } from "@/components/ui/card";
+import { ChevronRightIcon } from "@/components/icons";
 import { fetchEntriesInRange } from "@/lib/entries-client";
 import { isoDate, todayISO } from "@/lib/date";
 
 const WINDOW = 7;
-const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
+const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "long" });
+const MONTH = new Intl.DateTimeFormat("fr-FR", { month: "long" });
 const FULL = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
 /**
@@ -21,6 +23,12 @@ const FULL = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric",
  * Bloc **silencieux quand il n'y a rien à rattraper** : une semaine complète
  * n'affiche rien du tout. C'est une aide, pas un reproche — pas de compteur
  * de série, pas de « tu as raté 3 jours ».
+ *
+ * ⚠️ Première version : des pastilles carrées alignées, façon sélecteur de
+ * dates. Motif de tableau de bord standard, rejeté — et à raison, le projet
+ * s'interdit exactement ça. Ce sont maintenant des lignes séparées par des
+ * filets, avec la date composée comme partout ailleurs dans l'app : chiffre
+ * en Bodoni, jour en petites capitales. Ne pas revenir aux vignettes.
  */
 export function MissedDays() {
   const [missing, setMissing] = useState<string[] | null>(null);
@@ -47,22 +55,30 @@ export function MissedDays() {
   return (
     <section className="pb-8">
       <CardLabel>À rattraper</CardLabel>
-      <ul className="flex flex-wrap gap-2">
+      <ul className="hairline-t">
         {missing.map((date) => {
           const d = new Date(`${date}T12:00:00`);
           return (
-            <li key={date}>
+            <li key={date} className="hairline-b">
               <Link
                 href={`/jour/${date}`}
                 aria-label={FULL.format(d)}
-                className="flex min-h-[56px] min-w-[56px] flex-col items-center justify-center rounded-2xl px-3 hairline bg-surface transition-colors hover:bg-surface-2"
+                className="flex min-h-[56px] items-center gap-3 text-muted transition-colors hover:text-foreground"
               >
-                <span aria-hidden className="text-[0.6rem] uppercase tracking-[0.12em] text-muted">
-                  {WEEKDAY.format(d).replace(".", "")}
+                <span aria-hidden className="flex items-baseline gap-3">
+                  <span className="font-display text-[1.5rem] leading-none text-foreground tabular">
+                    {d.getDate()}
+                  </span>
+                  {/* Le mois n'est écrit qu'au passage d'un mois à l'autre :
+                      dans une fenêtre de sept jours, il est presque toujours
+                      évident, et l'abréger donnait « DIM SEPT. » — une soupe
+                      d'abréviations. */}
+                  <span className="text-[0.7rem] uppercase tracking-[0.18em]">
+                    {WEEKDAY.format(d)}
+                    {d.getMonth() !== new Date().getMonth() ? ` ${MONTH.format(d)}` : ""}
+                  </span>
                 </span>
-                <span aria-hidden className="font-display text-[1.35rem] leading-none tabular">
-                  {d.getDate()}
-                </span>
+                <ChevronRightIcon aria-hidden className="ml-auto h-4 w-4" />
               </Link>
             </li>
           );

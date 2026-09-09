@@ -266,8 +266,20 @@ toute première direction, n'existe plus que dans l'historique Git.
 - **Rappel anti-générique** : le MCP 21st sert à piocher des composants
   dans une bibliothèque partagée, ce qui va frontalement contre la
   contrainte n°1 du projet. À utiliser pour l'audit et l'inspiration, pas
-  pour coller des composants tout faits dans l'app — la direction
-  "Atelier" est faite main exprès.
+  pour coller des composants tout faits dans l'app — la direction Nocturne
+  est faite main exprès.
+  **Usage qui marche vraiment, éprouvé** : chercher dans le catalogue le
+  motif qu'on s'apprête à dessiner, pour vérifier qu'on n'est *pas* en train
+  de refaire le composant le plus courant du marché. C'est ainsi que les
+  deux vignettes de chiffres ont été confondues (voir § Le jour où deux
+  blocs génériques sont passés). Et quand un résultat sort du lot — ici un
+  « Editorial Testimonial », grand chiffre pâle posé à côté du texte, sans
+  boîte — en retenir l'**idée** (le nombre comme ornement typographique,
+  pas comme badge coloré), jamais le code.
+- **Skill `ui-ux-pro-max`** : interrogée sur les cibles et espacements
+  tactiles pendant cette refonte. Utile comme garde-fou chiffré (44 pt iOS,
+  8 px entre deux cibles adjacentes), pas comme source de direction
+  artistique.
 - **Sharp + @resvg/resvg-js + @fontsource/fraunces + wawoff2** (npm,
   gratuits/open-source) : utilisés une fois par
   `scripts/generate-icons.mjs` pour rasteriser le monogramme SVG en PNG
@@ -482,9 +494,12 @@ l'estimation dans tous les cas.
 
 Deux chiffres complètent la section, tirés de données déjà collectées mais
 jusque-là muettes : la **durée moyenne d'un épisode** et le **nombre de jours
-avec médicament** sur la fenêtre de 21 jours. Dans les cartes, le chiffre est
-au-dessus du libellé : un libellé qui passe à la ligne décalerait sinon les
-deux nombres l'un par rapport à l'autre.
+avec médicament** sur la fenêtre de 21 jours. Ils sont **écrits dans une
+phrase**, les nombres composés en Bodoni dans le fil du texte — et en couleur
+de texte, pas en corail : l'accent est déjà pris par l'intervalle juste
+au-dessus, et trois nombres coraux dans la même section ne font plus ressortir
+aucun. Ici la hiérarchie vient de la taille et de la police, pas de la
+couleur.
 
 ### « À rattraper » sur l'accueil
 
@@ -492,7 +507,10 @@ deux nombres l'un par rapport à l'autre.
 jours de crise, justement. Il fallait ouvrir le calendrier, retrouver le jour
 sur l'anneau et le viser : trois gestes pour rattraper la veille. Les
 journées vides des sept derniers jours sont maintenant posées sur l'accueil,
-en pastilles de 56 px.
+en lignes de 56 px séparées par des filets, avec la date composée comme
+partout ailleurs (chiffre en Bodoni, jour en petites capitales). Le mois n'est
+écrit qu'au passage d'un mois à l'autre — dans une fenêtre de sept jours il
+est presque toujours évident, et l'abréger donnait « DIM SEPT. ».
 
 **Le bloc est silencieux quand il n'y a rien à rattraper** — une semaine
 complète n'affiche rien. C'est une aide, pas un reproche : pas de compteur
@@ -614,6 +632,30 @@ effacement total.
   iPhone (Safari → Partager → Sur l'écran d'accueil) : vérifier l'icône,
   l'absence de barre d'adresse en mode standalone, et le lancement hors
   connexion.
+
+## ⚠️ Le jour où deux blocs génériques sont passés
+
+Deux ajouts de ma propre initiative ont été rejetés par l'utilisatrice —
+« des blocs qui ressemblent à n'importe quelle IA » :
+- **deux vignettes de chiffres côte à côte** (`grid-cols-2`, filet, fond
+  relevé, libellé en petites capitales) sur l'écran Repères ;
+- **des pastilles carrées alignées** pour les jours à rattraper, façon
+  sélecteur de dates.
+
+Les deux respectaient pourtant la palette, les filets fins et les cibles
+tactiles. Ce n'était pas la peinture qui clochait, c'était **le motif** : la
+vignette de KPI et la rangée de pastilles sont les patrons les plus courants
+des bibliothèques de composants. Vérifié en interrogeant le catalogue 21st
+sur « stat display » : **sept résultats sur huit s'appellent littéralement
+« Stat Card » / « Statistics Card » / « KPI stat card »**.
+
+Ce qui les a remplacés : des phrases avec les nombres composés dans le fil du
+texte, et des lignes séparées par des filets. Aucune boîte.
+
+**Règle à retenir** : dans ce projet, un chiffre ou une liste **ne se met pas
+dans une boîte**. La page est un carnet, pas un tableau de bord — la
+hiérarchie passe par la taille, la police et les filets. Avant d'ajouter un
+bloc, se demander : est-ce que je viens de dessiner une carte de KPI ?
 
 ## Ce qu'il ne faut PAS faire
 

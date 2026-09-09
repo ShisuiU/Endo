@@ -442,7 +442,11 @@ l'accueil redevient un écran de lecture. Le titre change avec l'état
 L'accueil ne sert plus à saisir, mais à **relire** : le résumé reprend
 l'ordre du parcours (crise, les quatre notes en chiffres, médicament, repas,
 notes) et **chaque ligne est tapable** — elle ouvre le parcours directement à
-sa question, pour corriger sans repasser par le reste. Tant que la journée
+sa question, pour corriger sans repasser par le reste. Ce sont des lignes
+séparées par des filets, à fleur de marge : **ni fond, ni contour, ni coins
+arrondis** (le bloc-carte d'origine est parti avec les autres, voir § Le jour
+où deux blocs génériques sont passés). Seule la crise garde le corail — c'est
+la seule chose qui doit sauter aux yeux dans ce résumé. Tant que la journée
 est vierge, le résumé laisse place à une simple invitation. Le bouton dit ce
 qu'il fait : « Évaluer la journée » / « Compléter la journée » (une note
 manque) / « Revoir la journée ».
@@ -635,12 +639,14 @@ effacement total.
 
 ## ⚠️ Le jour où deux blocs génériques sont passés
 
-Deux ajouts de ma propre initiative ont été rejetés par l'utilisatrice —
-« des blocs qui ressemblent à n'importe quelle IA » :
+Trois blocs ont été rejetés par l'utilisatrice — « des blocs qui ressemblent
+à n'importe quelle IA ». Deux venaient de ma propre initiative, le troisième
+a suivi dans la foulée :
 - **deux vignettes de chiffres côte à côte** (`grid-cols-2`, filet, fond
   relevé, libellé en petites capitales) sur l'écran Repères ;
 - **des pastilles carrées alignées** pour les jours à rattraper, façon
-  sélecteur de dates.
+  sélecteur de dates ;
+- **le résumé du jour** de l'accueil, bloc arrondi sur fond relevé.
 
 Les deux respectaient pourtant la palette, les filets fins et les cibles
 tactiles. Ce n'était pas la peinture qui clochait, c'était **le motif** : la

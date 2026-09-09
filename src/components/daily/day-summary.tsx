@@ -44,54 +44,51 @@ export function DaySummary({
   onOpen: (step: number) => void;
 }) {
   return (
-    <div className="hairline overflow-hidden rounded-2xl bg-surface">
-      {items.map((item, i) => (
-        <button
-          key={item.kind === "scores" ? "scores" : item.label}
-          type="button"
-          onClick={() => onOpen(item.step)}
-          className={cn(
-            "flex w-full min-h-[56px] items-center gap-4 px-5 text-left transition-colors hover:bg-surface-2",
-            item.kind === "scores" ? "py-4" : "py-3.5",
-            i > 0 && "hairline-t"
-          )}
-        >
-          {item.kind === "scores" ? (
-            <span className="grid flex-1 grid-cols-4 gap-2">
-              {item.scores.map(({ key, label, value }) => (
-                <span key={key} className="block">
-                  <span className="block text-[0.6rem] uppercase tracking-[0.14em] text-muted">
-                    {label}
+    <ul className="hairline-t">
+      {items.map((item) => (
+        <li key={item.kind === "scores" ? "scores" : item.label} className="hairline-b">
+          <button
+            type="button"
+            onClick={() => onOpen(item.step)}
+            className="flex w-full min-h-[56px] items-center gap-4 py-3 text-left text-muted transition-colors hover:text-foreground"
+          >
+            {item.kind === "scores" ? (
+              <span className="grid flex-1 grid-cols-4 gap-2">
+                {item.scores.map(({ key, label, value }) => (
+                  <span key={key} className="block">
+                    <span className="block text-[0.6rem] uppercase tracking-[0.14em]">
+                      {label}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-1.5 block font-display italic text-[1.5rem] leading-none tabular",
+                        value === null ? "text-muted/45" : "text-foreground"
+                      )}
+                    >
+                      {value ?? "–"}
+                    </span>
                   </span>
-                  <span
-                    className={cn(
-                      "mt-1 block font-display italic text-[1.5rem] leading-none tabular",
-                      value === null ? "text-muted/45" : "text-accent"
-                    )}
-                  >
-                    {value ?? "–"}
-                  </span>
+                ))}
+              </span>
+            ) : (
+              <>
+                <span className="w-24 shrink-0 text-[0.6rem] uppercase tracking-[0.14em]">
+                  {item.label}
                 </span>
-              ))}
-            </span>
-          ) : (
-            <>
-              <span className="w-28 shrink-0 text-[0.6rem] uppercase tracking-[0.14em] text-muted">
-                {item.label}
-              </span>
-              <span
-                className={cn(
-                  "flex-1 truncate text-[0.9rem]",
-                  item.empty ? "text-muted/45" : item.accent ? "text-accent" : "text-foreground"
-                )}
-              >
-                {item.value}
-              </span>
-            </>
-          )}
-          <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-        </button>
+                <span
+                  className={cn(
+                    "flex-1 truncate text-[0.9rem]",
+                    item.empty ? "text-muted/45" : item.accent ? "text-accent" : "text-foreground"
+                  )}
+                >
+                  {item.value}
+                </span>
+              </>
+            )}
+            <ChevronRightIcon className="h-4 w-4 shrink-0" aria-hidden />
+          </button>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

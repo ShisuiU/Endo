@@ -73,6 +73,11 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
 - **Calendrier en anneau** (`MonthRing`) plutôt qu'en grille : une grille de
   tableur ne raconte rien d'un cycle. Les jours restent ouvrables grâce à
   des secteurs de clic transparents (72 × 56 px de boîte englobante, mesuré).
+  **Trois niveaux de trait** : journée notée (franc), crise (épais, corail),
+  journée laissée vide (court et pâle, 0.22 d'opacité). L'anneau dessinait
+  auparavant le même trait dans tous les cas — un mois entièrement rempli
+  était visuellement identique à un mois vide, ce qui n'est apparu qu'en
+  peuplant un compte pour de vrai.
 - Icônes maison en SVG inline (`src/components/icons.tsx`), trait 1.5.
 - Logotype : "endo" en Libre Bodoni italique, sans cartouche.
 - **Navigation basse en capsule** (`BottomNav`) : les trois écrans sont des
@@ -436,15 +441,21 @@ il est apparu en peuplant un compte avec deux mois de journées plausibles.
 
 ## `scripts/seed-demo.mjs` — peupler un compte
 
-`SUPABASE_ACCESS_TOKEN=sbp_... node scripts/seed-demo.mjs <email> [jours]`
-écrit des journées vraisemblables (crises groupées en début de cycle de 27 à
+`SUPABASE_ACCESS_TOKEN=sbp_... node scripts/seed-demo.mjs <email> [jours]
+[--full] [--from=AAAA-MM-JJ]` écrit des journées vraisemblables (crises groupées en début de cycle de 27 à
 30 jours, douleur/sommeil/humeur/énergie corrélés, médicament surtout les
 jours de crise, ~12 % de journées non saisies pour que le carnet ait des
-trous). Générateur déterministe : relancer donne exactement les mêmes
-journées.
+trous — `--full` les remplit toutes). Générateur déterministe : relancer
+donne exactement les mêmes journées.
+
+⚠️ La poussée isolée hors cycle n'est ajoutée qu'au-delà de 45 jours de
+période. Ajoutée systématiquement, elle rapprochait trop les crises sur une
+période courte et faussait l'intervalle moyen affiché dans les repères
+(11 jours au lieu de 18).
 
 Garde-fous, à conserver si le script évolue :
-- il **n'écrase jamais** une journée déjà saisie ;
+- il **n'écrase jamais** une vraie journée ; il ne réécrit que les siennes,
+  reconnues à leur marque `[démo]` ;
 - chaque journée écrite porte la marque `[démo]` en fin de notes, et
   `--clear` ne supprime **que** celles-là ;
 - la clé `service_role` n'est **jamais écrite sur le disque** : soit elle

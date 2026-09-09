@@ -108,8 +108,12 @@ export function MonthRing() {
         {days.map(({ day, date, angle }) => {
           const entry = entries[date];
           const crisis = entry?.had_crisis ?? false;
-          const inner = point(angle, RADIUS - 13);
-          const outer = point(angle, RADIUS + (crisis ? 13 : 7));
+          // Un jour noté porte un trait franc, un jour laissé vide un trait
+          // à peine posé : sans cet écart, l'anneau était identique qu'on
+          // ait rempli le mois entier ou rien du tout.
+          const logged = Boolean(entry);
+          const inner = point(angle, RADIUS - (logged ? 13 : 7));
+          const outer = point(angle, RADIUS + (crisis ? 13 : logged ? 7 : 3));
           const med = point(angle, RADIUS + 22);
           const dot = point(angle, RADIUS - 26);
           const lab = point(angle, RADIUS + 38);
@@ -123,8 +127,8 @@ export function MonthRing() {
                 x2={outer.x}
                 y2={outer.y}
                 stroke={crisis ? "var(--color-coral)" : "var(--color-muted-ink)"}
-                strokeOpacity={crisis ? 1 : 0.4}
-                strokeWidth={crisis ? 3.5 : 1.5}
+                strokeOpacity={crisis ? 1 : logged ? 0.75 : 0.22}
+                strokeWidth={crisis ? 3.5 : logged ? 2 : 1.2}
                 strokeLinecap="round"
               />
               {entry?.medication_taken && (
@@ -177,6 +181,7 @@ export function MonthRing() {
           ].join(" ");
           const entry = entries[date];
           const parts = [FULL_DATE.format(new Date(date + "T12:00:00"))];
+          if (!entry) parts.push("rien de noté");
           if (entry?.had_crisis) parts.push("crise");
           if (entry?.medication_taken) parts.push("médicament pris");
 
@@ -225,7 +230,10 @@ export function MonthRing() {
         </text>
       </svg>
 
-      <div className="flex items-center justify-center gap-6 mt-6 text-[0.8rem] text-muted">
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-[0.8rem] text-muted">
+        <span className="flex items-center gap-2">
+          <span aria-hidden className="w-4 h-[2px] rounded-full bg-muted/70" /> Journée notée
+        </span>
         <span className="flex items-center gap-2">
           <span aria-hidden className="w-4 h-[3px] rounded-full bg-accent" /> Crise
         </span>

@@ -8,8 +8,11 @@
  * là, elles se mélangent aux vraies dans le calendrier et les statistiques.
  * Le script n'écrase jamais une journée déjà saisie.
  *
- *   SUPABASE_SERVICE_ROLE_KEY=... node scripts/seed-demo.mjs <email> [jours]
- *   SUPABASE_ACCESS_TOKEN=sbp_...  node scripts/seed-demo.mjs <email> --clear
+ *   node scripts/seed-demo.mjs <email> [jours] [--full] [--from=AAAA-MM-JJ]
+ *   node scripts/seed-demo.mjs <email> --clear
+ *
+ * `--full` remplit **chaque** journée de la période, sans trou. Sans lui, le
+ * script en saute ~12 % : un carnet réel a des jours oubliés.
  *
  * La clé `service_role` contourne la RLS : elle ne doit jamais toucher le
  * front ni être versionnée, et ce script ne l'écrit nulle part.
@@ -17,12 +20,17 @@
 
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://ztucdcyfeqaeeogzjzeo.supabase.co";
 const REF = new URL(URL_).hostname.split(".")[0];
-const [email, arg] = process.argv.slice(2);
-const clear = arg === "--clear";
-const DAYS = clear ? 0 : Number(arg ?? 60);
+const args = process.argv.slice(2);
+const email = args.find((a) => !a.startsWith("-"));
+const clear = args.includes("--clear");
+/** Sans trous : chaque journée de la période est remplie. */
+const full = args.includes("--full");
+const from = args.find((a) => a.startsWith("--from="))?.slice(7);
+const DAYS = clear ? 0 : Number(args.find((a) => /^\d+$/.test(a)) ?? 60);
 
 if (!email) {
-  console.error("Usage : SUPABASE_SERVICE_ROLE_KEY=... node scripts/seed-demo.mjs <email> [jours|--clear]");
+  console.error("Usage : SUPABASE_SERVICE_ROLE_KEY=... node scripts/seed-demo.mjs <email> [jours] [--full] [--from=AAAA-MM-JJ]");
+  console.error("        SUPABASE_SERVICE_ROLE_KEY=... node scripts/seed-demo.mjs <email> --clear");
   console.error("   ou : SUPABASE_ACCESS_TOKEN=sbp_...   (la clé est alors récupérée à la volée)");
   process.exit(1);
 }
@@ -106,33 +114,45 @@ if (clear) {
 }
 
 const existing = await fetch(
-  `${URL_}/rest/v1/daily_entries?user_id=eq.${user.id}&select=entry_date`,
+  `${URL_}/rest/v1/daily_entries?user_id=eq.${user.id}&select=entry_date,notes`,
   { headers: head }
 ).then((r) => r.json());
-const already = new Set(existing.map((r) => r.entry_date));
+// Une journée déjà écrite par ce script (marquée `[démo]`) peut être
+// réécrite ; une vraie journée, jamais.
+const real = new Set(existing.filter((r) => !r.notes?.includes("[démo]")).map((r) => r.entry_date));
+const demo = new Set(existing.filter((r) => r.notes?.includes("[démo]")).map((r) => r.entry_date));
 
 // Modèle : des crises groupées en début de cycle (27 à 30 jours), plus une
 // poussée isolée. La douleur, le sommeil, l'humeur et l'énergie suivent —
 // sinon les courbes des repères ne raconteraient rien.
 const today = new Date();
+// `--from` fixe le premier jour ; sinon on remonte de `DAYS` jours.
+const span = from
+  ? Math.round((today - new Date(`${from}T12:00:00`)) / 86400000)
+  : DAYS;
 const crisisDays = new Set();
-let cursor = DAYS - 4;
+let cursor = span - 4;
 while (cursor > 0) {
   const length = between(2, 4);
   for (let i = 0; i < length && cursor - i > 0; i += 1) crisisDays.add(cursor - i);
   cursor -= between(27, 30);
 }
-crisisDays.add(between(12, 18));
+// Une poussée isolée hors cycle — mais seulement sur une période assez
+// longue pour qu'elle reste l'exception. Ajoutée systématiquement, elle
+// rapprochait les crises au point de fausser l'intervalle moyen affiché
+// dans les repères (11 jours au lieu de 18 sur deux mois).
+if (span >= 45) crisisDays.add(between(12, 18));
 
 const rows = [];
-for (let back = DAYS; back >= 1; back -= 1) {
+for (let back = span; back >= 1; back -= 1) {
   const date = new Date(today);
   date.setDate(date.getDate() - back);
   const day = iso(date);
-  if (already.has(day)) continue;
-  if (rnd() < 0.12) continue; // un carnet a des trous
+  if (real.has(day)) continue;
+  // Sans `--full`, on laisse quelques trous : un carnet réel en a.
+  if (!full && rnd() < 0.12) continue;
 
-  const offset = DAYS - back;
+  const offset = span - back;
   const crisis = crisisDays.has(offset);
   const near = !crisis && (crisisDays.has(offset + 1) || crisisDays.has(offset - 1));
   const medication = crisis ? rnd() < 0.9 : rnd() < 0.15;
@@ -166,6 +186,7 @@ if (!res.ok) {
 }
 console.log(
   `${rows.length} journées écrites pour ${email} (${rows.at(0).entry_date} → ${rows.at(-1).entry_date}), ` +
-    `dont ${rows.filter((r) => r.had_crisis).length} avec crise. ` +
-    `${already.size} journée(s) déjà saisie(s) laissée(s) intacte(s).`
+    `dont ${rows.filter((r) => r.had_crisis).length} avec crise, ` +
+    `${rows.filter((r) => demo.has(r.entry_date)).length} réécrites. ` +
+    `${real.size} vraie(s) journée(s) laissée(s) intacte(s).`
 );

@@ -16,7 +16,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     return { error: "Email ou mot de passe incorrect." };
   }
 
-  redirect("/aujourdhui");
+  redirect("/accueil");
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -48,7 +48,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     };
   }
 
-  redirect("/aujourdhui");
+  redirect("/accueil");
 }
 
 export async function signOut() {

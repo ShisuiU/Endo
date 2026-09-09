@@ -6,7 +6,10 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "endo",
     description:
       "Carnet quotidien privé pour suivre l'endométriose : crises, douleur, sommeil, médicaments et repas.",
-    start_url: "/aujourdhui",
+    start_url: "/accueil",
+    // `id` reste sur l'ancienne valeur : c'est lui qui identifie l'app
+    // déjà installée. Le changer ferait apparaître un second raccourci sur
+    // l'écran d'accueil au lieu de mettre à jour le premier.
     id: "/aujourdhui",
     scope: "/",
     display: "standalone",

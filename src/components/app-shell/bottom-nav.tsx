@@ -48,7 +48,7 @@ import { cn } from "@/lib/cn";
  * s'efface entièrement sous `prefers-reduced-motion`.
  */
 const ITEMS = [
-  { href: "/aujourdhui", label: "Aujourd'hui", Icon: JournalIcon },
+  { href: "/accueil", label: "Accueil", Icon: JournalIcon },
   { href: "/calendrier", label: "Calendrier", Icon: RingIcon },
   { href: "/statistiques", label: "Repères", Icon: TrendIcon },
 ] as const;

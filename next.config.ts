@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // « Aujourd'hui » est devenu « Accueil ». L'app déjà posée sur un écran
+  // d'accueil démarre encore sur l'ancienne adresse (son `start_url` est figé
+  // dans le manifeste installé) : sans cette redirection, elle ouvrirait sur
+  // une page introuvable. Temporaire (307) et non permanente, pour ne pas
+  // graver la redirection dans le cache de Safari.
+  async redirects() {
+    return [{ source: "/aujourdhui", destination: "/accueil", permanent: false }];
+  },
+
   async headers() {
     return [
       {

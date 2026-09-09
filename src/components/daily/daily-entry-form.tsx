@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CardLabel } from "@/components/ui/card";
 import { ScoreSlider } from "@/components/ui/score-slider";
+import { ScoreWizard, type ScoreStep } from "@/components/daily/score-wizard";
 import { Toggle } from "@/components/ui/toggle";
 import { TagInput } from "@/components/ui/tag-input";
-import { DropletIcon, LeafIcon, MoonIcon, NoteIcon, SparkIcon } from "@/components/icons";
+import { ChevronRightIcon, LeafIcon, NoteIcon, SparkIcon } from "@/components/icons";
 import { currentUserId, fetchEntry, upsertEntry } from "@/lib/entries-client";
 import {
   claimDate,
@@ -15,6 +16,7 @@ import {
   writePending,
 } from "@/lib/pending-entries";
 import { dateParts } from "@/lib/date";
+import { cn } from "@/lib/cn";
 import type { DailyEntry, DailyEntryInput } from "@/lib/supabase/types";
 
 type Draft = {
@@ -79,6 +81,17 @@ function toPayload(date: string, draft: Draft): DailyEntryInput {
   };
 }
 
+/**
+ * Les quatre notes de la journée, dans l'ordre où on les demande : ce qui
+ * fait mal d'abord, ce qui répare ensuite.
+ */
+const SCORES = [
+  { key: "pain_score", label: "Douleur", hint: "0 : rien. 10 : la pire que tu connaisses." },
+  { key: "sleep_score", label: "Sommeil", hint: "La nuit qui vient de passer, pas la fatigue du jour." },
+  { key: "mood_score", label: "Humeur", hint: "Le moral, indépendamment de la douleur." },
+  { key: "energy_score", label: "Énergie", hint: "Ce que tu as pu faire aujourd'hui." },
+] as const satisfies readonly { key: keyof Draft; label: string; hint: string }[];
+
 /** Empreinte du brouillon, pour ne rien envoyer qui n'a pas bougé. */
 const fingerprint = (draft: Draft) => JSON.stringify(draft);
 
@@ -86,6 +99,8 @@ export function DailyEntryForm({ date }: { date: string }) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [status, setStatus] = useState<Status>("loading");
   const [retry, setRetry] = useState(0);
+  /** Index de la question ouverte dans l'assistant, `null` s'il est fermé. */
+  const [wizardAt, setWizardAt] = useState<number | null>(null);
   const hydrated = useRef(false);
   const userId = useRef<string | null>(null);
   /** Dernier état connu du serveur : sert de témoin pour ne pas réécrire
@@ -132,9 +147,16 @@ export function DailyEntryForm({ date }: { date: string }) {
     };
   }, [date]);
 
-  function update<K extends keyof Draft>(key: K, value: Draft[K]) {
+  const update = useCallback(<K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((prev) => ({ ...prev, [key]: value }));
-  }
+  }, []);
+
+  // Stables : le dialogue d'évaluation les prend en dépendance d'effet.
+  const closeWizard = useCallback(() => setWizardAt(null), []);
+  const setScore = useCallback(
+    (key: string, value: number) => update(key as keyof Draft, value as Draft[keyof Draft]),
+    [update]
+  );
 
   useEffect(() => {
     if (!hydrated.current) return;
@@ -162,6 +184,13 @@ export function DailyEntryForm({ date }: { date: string }) {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, [draft, date, retry]);
+
+  const answered = SCORES.filter(({ key }) => draft[key] !== null).length;
+  // On rouvre là où il reste à répondre, pas systématiquement au début.
+  const firstUnanswered = Math.max(
+    SCORES.findIndex(({ key }) => draft[key] === null),
+    0
+  );
 
   const retryNow = useCallback(() => setRetry((n) => n + 1), []);
 
@@ -207,30 +236,45 @@ export function DailyEntryForm({ date }: { date: string }) {
         )}
       </section>
 
-      <section className="py-7 hairline-b flex flex-col gap-7">
-        <CardLabel className="mb-0">Ressenti</CardLabel>
-        <ScoreSlider
-          label="Douleur"
-          icon={<DropletIcon className="w-4 h-4" />}
-          value={draft.pain_score}
-          onChange={(v) => update("pain_score", v)}
-        />
-        <ScoreSlider
-          label="Sommeil"
-          icon={<MoonIcon className="w-4 h-4" />}
-          value={draft.sleep_score}
-          onChange={(v) => update("sleep_score", v)}
-        />
-        <ScoreSlider
-          label="Humeur"
-          value={draft.mood_score}
-          onChange={(v) => update("mood_score", v)}
-        />
-        <ScoreSlider
-          label="Énergie"
-          value={draft.energy_score}
-          onChange={(v) => update("energy_score", v)}
-        />
+      {/* Les quatre notes ne sont plus empilées ici : elles se remplissent une
+          par écran (voir `ScoreWizard`). Ce bloc ne garde que ce qu'on veut
+          voir d'un coup d'œil — ce qui est déjà noté — et sert de porte
+          d'entrée. */}
+      <section className="py-7 hairline-b">
+        <CardLabel>Ressenti</CardLabel>
+        <button
+          type="button"
+          onClick={() => setWizardAt(firstUnanswered)}
+          className="w-full hairline rounded-2xl bg-surface px-5 py-4 min-h-[56px] flex items-center gap-4 text-left transition-colors hover:bg-surface-2"
+        >
+          {answered === 0 ? (
+            <span className="flex-1">
+              <span className="block text-[0.95rem]">Évaluer la journée</span>
+              <span className="mt-1 block text-[0.78rem] text-muted">
+                Douleur, sommeil, humeur, énergie — une question à la fois.
+              </span>
+            </span>
+          ) : (
+            <span className="flex-1 grid grid-cols-4 gap-2">
+              {SCORES.map(({ key, label }) => (
+                <span key={key} className="block">
+                  <span className="block text-[0.6rem] uppercase tracking-[0.14em] text-muted">
+                    {label}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-1 block font-display italic text-[1.5rem] leading-none tabular",
+                      draft[key] === null ? "text-muted/45" : "text-accent"
+                    )}
+                  >
+                    {draft[key] ?? "–"}
+                  </span>
+                </span>
+              ))}
+            </span>
+          )}
+          <ChevronRightIcon className="w-5 h-5 shrink-0 text-muted" aria-hidden />
+        </button>
       </section>
 
       <section className="py-7 hairline-b">
@@ -285,6 +329,20 @@ export function DailyEntryForm({ date }: { date: string }) {
           />
         </label>
       </section>
+
+      {wizardAt !== null && (
+        <ScoreWizard
+          steps={SCORES.map(({ key, label, hint }): ScoreStep => ({
+            key,
+            label,
+            hint,
+            value: draft[key] as number | null,
+          }))}
+          startAt={wizardAt}
+          onChange={setScore}
+          onClose={closeWizard}
+        />
+      )}
 
       {status === "error" ? (
         <UnsavedNotice onRetry={retryNow} />

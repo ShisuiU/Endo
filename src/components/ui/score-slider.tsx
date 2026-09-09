@@ -21,24 +21,29 @@ export function ScoreSlider({
   value,
   onChange,
   icon,
+  labelHidden = false,
 }: {
   label: string;
   value: number | null;
   onChange: (value: number) => void;
   icon?: React.ReactNode;
+  /** Masque le libellé visible — utile là où le titre de l'écran le dit
+   *  déjà (l'évaluation pas à pas). Le nom reste porté par `aria-label`. */
+  labelHidden?: boolean;
 }) {
   const unset = value === null;
 
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
-        <div className="flex items-center gap-2 text-foreground">
+        <div className={cn("flex items-center gap-2 text-foreground", labelHidden && "sr-only")}>
           {icon}
           <span className="text-[0.95rem]">{label}</span>
         </div>
         <span
           className={cn(
-            "font-display italic text-[1.75rem] leading-none tabular transition-colors",
+            "font-display italic leading-none tabular transition-colors",
+            labelHidden ? "text-[2.4rem]" : "text-[1.75rem]",
             unset ? "text-muted/50" : "text-accent"
           )}
         >

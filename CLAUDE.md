@@ -172,18 +172,19 @@ toute première direction, n'existe plus que dans l'historique Git.
   mais ne pas le documenter à tort comme HttpOnly), rafraîchie dans
   `src/proxy.ts` (le fichier `middleware.ts` a été renommé `proxy.ts` —
   convention Next.js 16). Redirige vers `/connexion` si non connecté,
-  vers `/aujourdhui` si déjà connecté sur les pages d'auth.
+  vers `/accueil` si déjà connecté sur les pages d'auth.
 - **Structure des dossiers** :
   ```
   src/app/
     (auth)/connexion, (auth)/inscription, (auth)/actions.ts   — auth (Server Actions)
-    (app)/aujourdhui, (app)/calendrier, (app)/jour/[date],
+    (app)/accueil, (app)/calendrier, (app)/jour/[date],
           (app)/statistiques, (app)/layout.tsx                — zone connectée (nav, garde d'auth)
     manifest.ts, layout.tsx, globals.css                       — shell + PWA
   src/components/
     ui/            — Button, Card, ScoreSlider, Toggle, TagInput, Wordmark
     icons.tsx       — set d'icônes maison
-    daily/          — formulaire de saisie quotidienne (réutilisé par /aujourdhui et /jour/[date])
+    daily/          — formulaire de saisie quotidienne (réutilisé par /accueil et /jour/[date])
+                      + ScoreWizard (les quatre notes, une par écran)
     calendar/       — grille mensuelle
     stats/          — courbes de tendance dessinées à la main
     pwa/            — enregistrement du service worker, invite iOS "à l'écran d'accueil"
@@ -352,6 +353,44 @@ peser — ne pas le faire à la légère (l'app ne lit aucune donnée côté
 serveur, tout passe par la RLS côté client, donc le risque est faible, mais
 ça mérite d'être décidé, pas subi).
 
+## Évaluer la journée — les notes, une par écran
+
+L'écran d'accueil empilait quatre réglettes (douleur, sommeil, humeur,
+énergie) : quatre questions à tenir en tête d'un coup, et une page longue
+avant d'arriver au reste. À la demande de l'utilisatrice, elles sont passées
+derrière **un seul bouton**, et se remplissent une par écran avec
+« Suivant » (`src/components/daily/score-wizard.tsx`).
+
+- Le bloc « Ressenti » de l'accueil ne garde que ce qui se lit d'un coup
+  d'œil : « Évaluer la journée » tant que rien n'est noté, sinon les quatre
+  notes en résumé. Le bloc entier est le bouton (98 px de haut).
+- Rouvrir repart **à la première question sans réponse**, pas au début.
+- Chaque note part vers le brouillon dès qu'elle bouge, pas à la fin : on
+  peut fermer au milieu sans rien perdre — ce qui compte quand on abandonne
+  parce que la douleur reprend. « Suivant » n'exige rien, une note peut
+  rester vide (« non renseigné », pas zéro).
+- L'animation entre questions ne touche qu'`opacity` et `transform`, jamais
+  la géométrie (leçon de la barre de navigation), et disparaît sous
+  `prefers-reduced-motion`.
+
+⚠️ **Piège rencontré, à ne pas réintroduire** : l'effet qui donne le focus au
+dialogue partageait ses dépendances avec l'écouteur d'Échap, donc `onClose` —
+une fonction recréée à chaque rendu du parent. Il se rejouait à **chaque
+note saisie** et reprenait le focus : au clavier, une seule flèche était
+prise en compte, les suivantes tombaient dans le vide. Le focus a maintenant
+son propre effet monté une seule fois, et le parent passe des callbacks
+stables (`useCallback`). Trouvé en testant, invisible au build et au lint.
+
+**Renommage `/aujourdhui` → `/accueil`** : l'onglet et la route s'appellent
+désormais « Accueil ». Deux précautions pour ne pas casser une app déjà
+posée sur un écran d'accueil :
+- `next.config.ts` redirige `/aujourdhui` vers `/accueil` (307, non
+  permanente — pour ne pas graver la redirection dans le cache de Safari) :
+  le `start_url` figé dans le manifeste installé continue de fonctionner ;
+- **`id` du manifeste reste `/aujourdhui`**. C'est lui qui identifie l'app
+  installée : le changer ferait apparaître un second raccourci au lieu de
+  mettre à jour le premier. Ne pas « corriger » cette incohérence apparente.
+
 ## PWA
 
 - **Manifest** : `src/app/manifest.ts` (route générée
@@ -483,6 +522,10 @@ ressembler à un site généré par IA.**
 - **Navigation rendue instantanée** : frontière de chargement pour permettre
   le préchargement, pastille optimiste, emplacements de largeur fixe.
   6 assertions Playwright (avec latence serveur simulée).
+
+- **Notes de la journée en parcours pas à pas** (`ScoreWizard`) et onglet
+  « Aujourd'hui » renommé « Accueil », avec redirection de l'ancienne route.
+  15 assertions Playwright au vert.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

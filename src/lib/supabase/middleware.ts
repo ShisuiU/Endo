@@ -53,7 +53,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && (pathname === "/connexion" || pathname === "/inscription")) {
-    return redirectTo("/aujourdhui");
+    return redirectTo("/accueil");
   }
 
   return response;

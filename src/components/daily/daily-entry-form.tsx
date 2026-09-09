@@ -1,14 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CardLabel } from "@/components/ui/card";
 import { ScoreSlider } from "@/components/ui/score-slider";
 import { Toggle } from "@/components/ui/toggle";
 import { TagInput } from "@/components/ui/tag-input";
 import { DropletIcon, LeafIcon, MoonIcon, NoteIcon, SparkIcon } from "@/components/icons";
-import { fetchEntry, upsertEntry } from "@/lib/entries-client";
+import { currentUserId, fetchEntry, upsertEntry } from "@/lib/entries-client";
+import {
+  claimDate,
+  clearPending,
+  readPending,
+  releaseDate,
+  writePending,
+} from "@/lib/pending-entries";
 import { dateParts } from "@/lib/date";
-import type { DailyEntryInput } from "@/lib/supabase/types";
+import type { DailyEntry, DailyEntryInput } from "@/lib/supabase/types";
 
 type Draft = {
   had_crisis: boolean;
@@ -23,6 +30,8 @@ type Draft = {
   notes: string;
 };
 
+type Status = "loading" | "idle" | "saving" | "saved" | "error";
+
 const EMPTY_DRAFT: Draft = {
   had_crisis: false,
   crisis_intensity: null,
@@ -36,36 +45,91 @@ const EMPTY_DRAFT: Draft = {
   notes: "",
 };
 
+function draftFromEntry(entry: DailyEntry): Draft {
+  return {
+    had_crisis: entry.had_crisis,
+    crisis_intensity: entry.crisis_intensity,
+    pain_score: entry.pain_score,
+    sleep_score: entry.sleep_score,
+    mood_score: entry.mood_score,
+    energy_score: entry.energy_score,
+    medication_taken: entry.medication_taken,
+    medication_notes: entry.medication_notes ?? "",
+    foods: entry.foods,
+    notes: entry.notes ?? "",
+  };
+}
+
+function draftFromPayload(payload: DailyEntryInput): Draft {
+  return {
+    ...EMPTY_DRAFT,
+    ...payload,
+    medication_notes: payload.medication_notes ?? "",
+    notes: payload.notes ?? "",
+    foods: payload.foods ?? [],
+  };
+}
+
+function toPayload(date: string, draft: Draft): DailyEntryInput {
+  return {
+    entry_date: date,
+    ...draft,
+    medication_notes: draft.medication_notes || null,
+    notes: draft.notes || null,
+  };
+}
+
+/** Empreinte du brouillon, pour ne rien envoyer qui n'a pas bougé. */
+const fingerprint = (draft: Draft) => JSON.stringify(draft);
+
 export function DailyEntryForm({ date }: { date: string }) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
-  const [status, setStatus] = useState<"loading" | "idle" | "saving" | "saved">("loading");
+  const [status, setStatus] = useState<Status>("loading");
+  const [retry, setRetry] = useState(0);
   const hydrated = useRef(false);
+  const userId = useRef<string | null>(null);
+  /** Dernier état connu du serveur : sert de témoin pour ne pas réécrire
+   *  une journée qu'on vient juste de lire (sinon ouvrir un jour vide y
+   *  créait une ligne, et le calendrier affichait des journées fantômes). */
+  const saved = useRef("");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { day, month, weekday } = dateParts(date);
 
   useEffect(() => {
+    let cancelled = false;
     hydrated.current = false;
     setStatus("loading");
-    fetchEntry(date).then((entry) => {
-      setDraft(
-        entry
-          ? {
-              had_crisis: entry.had_crisis,
-              crisis_intensity: entry.crisis_intensity,
-              pain_score: entry.pain_score,
-              sleep_score: entry.sleep_score,
-              mood_score: entry.mood_score,
-              energy_score: entry.energy_score,
-              medication_taken: entry.medication_taken,
-              medication_notes: entry.medication_notes ?? "",
-              foods: entry.foods,
-              notes: entry.notes ?? "",
-            }
-          : EMPTY_DRAFT
-      );
+    claimDate(date);
+
+    (async () => {
+      const uid = await currentUserId();
+      if (cancelled) return;
+      userId.current = uid;
+
+      let fromServer = EMPTY_DRAFT;
+      let reachable = true;
+      try {
+        const entry = await fetchEntry(date);
+        if (entry) fromServer = draftFromEntry(entry);
+      } catch {
+        // Hors-ligne : on n'écrase surtout pas ce qui attend en local.
+        reachable = false;
+      }
+      if (cancelled) return;
+
+      const pending = uid ? readPending(uid, date) : null;
+      saved.current = reachable ? fingerprint(fromServer) : "";
+      // Une journée mise de côté est forcément plus récente que ce que le
+      // serveur renvoie : c'est la saisie qui n'a jamais pu partir.
+      setDraft(pending ? draftFromPayload(pending.payload) : fromServer);
       hydrated.current = true;
       setStatus("idle");
-    });
+    })();
+
+    return () => {
+      cancelled = true;
+      releaseDate(date);
+    };
   }, [date]);
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
@@ -74,26 +138,38 @@ export function DailyEntryForm({ date }: { date: string }) {
 
   useEffect(() => {
     if (!hydrated.current) return;
+    const snapshot = fingerprint(draft);
+    if (snapshot === saved.current) return;
+
     setStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const payload: DailyEntryInput = {
-        entry_date: date,
-        ...draft,
-        medication_notes: draft.medication_notes || null,
-        notes: draft.notes || null,
-      };
+      const payload = toPayload(date, draft);
       try {
         await upsertEntry(payload);
+        saved.current = snapshot;
+        if (userId.current) clearPending(userId.current, date);
         setStatus("saved");
       } catch {
-        setStatus("idle");
+        // L'échec est visible et la saisie survit au rechargement : c'est
+        // tout l'objet de la file locale.
+        if (userId.current) writePending(userId.current, date, payload);
+        setStatus("error");
       }
     }, 700);
+
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [draft, date]);
+  }, [draft, date, retry]);
+
+  const retryNow = useCallback(() => setRetry((n) => n + 1), []);
+
+  // Le retour du réseau relance l'envoi sans rien demander.
+  useEffect(() => {
+    window.addEventListener("online", retryNow);
+    return () => window.removeEventListener("online", retryNow);
+  }, [retryNow]);
 
   return (
     <div className="flex-1 flex flex-col px-6 pb-12">
@@ -210,18 +286,57 @@ export function DailyEntryForm({ date }: { date: string }) {
         </label>
       </section>
 
-      <p className="text-[0.75rem] text-muted">
-        Tout est enregistré au fil de la saisie, rien à valider.
-      </p>
+      {status === "error" ? (
+        <UnsavedNotice onRetry={retryNow} />
+      ) : (
+        <p className="text-[0.75rem] text-muted">
+          Tout est enregistré au fil de la saisie, rien à valider.
+        </p>
+      )}
     </div>
   );
 }
 
-function SaveIndicator({ status }: { status: "loading" | "idle" | "saving" | "saved" }) {
-  const label = status === "saving" ? "Enregistrement…" : status === "saved" ? "Enregistré" : "";
+function SaveIndicator({ status }: { status: Status }) {
+  const label =
+    status === "saving"
+      ? "Enregistrement…"
+      : status === "saved"
+        ? "Enregistré"
+        : status === "error"
+          ? "Non enregistré"
+          : "";
   return (
-    <span aria-live="polite" className="text-[0.75rem] text-muted min-h-[1em]">
+    <span
+      aria-live="polite"
+      className={`text-[0.75rem] min-h-[1em] ${status === "error" ? "text-accent" : "text-muted"}`}
+    >
       {label}
     </span>
+  );
+}
+
+/**
+ * L'échec se dit, il ne se devine pas. Le message insiste sur ce qui compte
+ * vraiment pour quelqu'un qui vient de noter sa journée : rien n'est perdu.
+ */
+function UnsavedNotice({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div role="alert" className="hairline rounded-2xl p-4 border-accent/40">
+      <p className="text-[0.85rem] leading-relaxed">
+        La connexion n&apos;a pas répondu.{" "}
+        <span className="text-muted">
+          Ta journée est gardée sur cet appareil et repartira toute seule dès le
+          retour du réseau — tu peux fermer l&apos;app.
+        </span>
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 min-h-[44px] px-5 rounded-full hairline text-[0.85rem] text-accent hover:bg-surface"
+      >
+        Réessayer maintenant
+      </button>
+    </div>
   );
 }

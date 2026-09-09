@@ -61,6 +61,42 @@ export function LeafIcon(props: IconProps) {
   );
 }
 
+/**
+ * Trio de la navigation basse. Dessiné pour ces trois écrans précis plutôt
+ * que pris dans un set : le carnet du jour, l'anneau du calendrier (le même
+ * cadran que `MonthRing`), et la courbe des repères.
+ */
+export function JournalIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="4.6" y="3.4" width="14.8" height="17.2" rx="2.4" />
+      <path d="M8.3 3.6v16.8" opacity={0.45} />
+      <path d="M11.4 8.6h4.7M11.4 12.1h4.7M11.4 15.6h2.9" />
+    </svg>
+  );
+}
+
+export function RingIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      {/* Anneau pointillé : les jours du mois posés en cercle, comme le
+          cadran de l'écran Calendrier. Un anneau à rayons se lirait comme
+          un soleil à cette taille — les tirets, non. */}
+      <circle cx="12" cy="12" r="7.6" strokeDasharray="1.5 2.5" />
+      <circle cx="17.4" cy="6.6" r="1.7" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function TrendIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3.4 16.9c2.7-.5 4-5 6.4-5.3 2.4-.3 3 3.4 4.9 2.9 1.9-.5 2.7-4.9 4.2-6.7" />
+      <circle cx="14.7" cy="14.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function CalendarIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

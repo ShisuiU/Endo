@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { LogoutIcon } from "@/components/icons";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { PendingSync } from "@/components/daily/pending-sync";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -34,6 +35,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <main className="flex-1 flex flex-col">{children}</main>
 
+      <PendingSync />
       <InstallPrompt />
       <BottomNav />
     </div>

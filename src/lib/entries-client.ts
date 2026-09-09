@@ -1,6 +1,19 @@
 import { createClient } from "@/lib/supabase/client";
 import type { DailyEntry, DailyEntryInput } from "@/lib/supabase/types";
 
+/**
+ * Identifiant du compte connecté. Sert à cloisonner ce qui est mis de côté
+ * en local (voir `pending-entries.ts`) : le stockage du navigateur est
+ * partagé, les comptes ne le sont pas.
+ */
+export async function currentUserId(): Promise<string | null> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
 export async function fetchEntry(entryDate: string): Promise<DailyEntry | null> {
   const supabase = createClient();
   const {

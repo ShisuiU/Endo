@@ -75,8 +75,20 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
   des secteurs de clic transparents (72 × 56 px de boîte englobante, mesuré).
 - Icônes maison en SVG inline (`src/components/icons.tsx`), trait 1.5.
 - Logotype : "endo" en Libre Bodoni italique, sans cartouche.
-- Micro-interactions : sauvegarde automatique silencieuse, transitions
-  d'état des contrôles. `prefers-reduced-motion` coupe tout globalement.
+- **Navigation basse en capsule** (`BottomNav`) : les trois écrans sont des
+  pictogrammes, seul l'écran courant s'ouvre en pastille pour dire son nom,
+  et la pastille glisse d'un onglet à l'autre (`layoutId` de `motion`).
+  Reprend le principe d'une barre repérée par l'utilisatrice sur 21st ;
+  réécrite avec les tokens Nocturne, les icônes maison et des cibles de
+  56 px, pas collée. La capsule est `sticky` : elle reste au pouce sans
+  jamais recouvrir la fin du formulaire (une position collante garde sa
+  place dans le flux). Le libellé visible est `aria-hidden`, le nom passe
+  par `aria-label` — les trois destinations s'annoncent pareil, ouvertes
+  ou repliées.
+- Micro-interactions : sauvegarde automatique silencieuse mais **jamais
+  muette en cas d'échec** (voir § Sauvegarde), transitions d'état des
+  contrôles. `prefers-reduced-motion` coupe tout globalement, y compris
+  les animations `motion` (via `useReducedMotion`).
 
 ## Thèmes — `design/themes.html`
 
@@ -154,10 +166,10 @@ toute première direction, n'existe plus que dans l'historique Git.
     calendar/       — grille mensuelle
     stats/          — courbes de tendance dessinées à la main
     pwa/            — enregistrement du service worker, invite iOS "à l'écran d'accueil"
-    app-shell/      — barre de navigation basse
+    app-shell/      — barre de navigation basse (capsule + pastille glissante)
   src/lib/
     supabase/       — clients browser/server/proxy + types
-    entries-client.ts, date.ts, stats.ts, cn.ts
+    entries-client.ts, pending-entries.ts, date.ts, stats.ts, cn.ts
   supabase/migrations/0001_init.sql
   scripts/generate-icons.mjs   — génère public/icons + public/splash
   ```
@@ -254,6 +266,46 @@ toute première direction, n'existe plus que dans l'historique Git.
   conflits de classes Tailwind sont résolus, la dernière l'emporte. Un
   composant peut donc accepter un `className` qui écrase ses valeurs par
   défaut.
+
+## Sauvegarde — ce qui se passe quand le réseau lâche
+
+Le carnet se remplit le soir, souvent au lit, parfois sans réseau. La
+sauvegarde automatique avalait l'échec en silence : l'app affichait
+« Enregistré », rien n'était parti, et la journée disparaissait au
+rechargement. Sur un carnet de douleur, c'est la panne la plus grave
+possible — on note une crise une fois, on ne la reconstitue pas après coup.
+
+Le dispositif tient en trois pièces :
+- `src/lib/pending-entries.ts` — file d'attente dans `localStorage`, une
+  entrée par journée, **clé portant l'identifiant du compte**
+  (`endo:pending:<user_id>:<date>`) : deux personnes peuvent partager un
+  téléphone, une journée en attente ne doit jamais partir dans le compte de
+  l'autre. Tous les accès sont enveloppés — Safari en navigation privée
+  lève sur `localStorage`.
+- `DailyEntryForm` — l'échec passe le statut à `error`, écrit la journée
+  dans la file, affiche un encart `role="alert"` (« ta journée est gardée
+  sur cet appareil ») avec un bouton « Réessayer maintenant », et relance
+  l'envoi tout seul sur l'événement `online`. Au chargement, une journée en
+  attente **prime sur ce que renvoie le serveur** : c'est la saisie qui n'a
+  jamais pu partir, donc la plus récente.
+- `PendingSync` (monté dans `(app)/layout.tsx`) — rejoue les journées
+  restées en attente sur *d'autres* dates, sans rien afficher. Sans lui, une
+  journée saisie hors-ligne n'aurait redémarré qu'en rouvrant exactement cet
+  écran-là. Un verrou (`claimDate`/`releaseDate`) l'empêche de doubler le
+  formulaire ouvert.
+
+Corrigé au passage : le garde-fou `hydrated` ne bloquait pas la sauvegarde
+déclenchée par le chargement (la ref passait à `true` dans le même tour que
+le `setDraft`), si bien qu'**ouvrir une journée l'écrivait en base**, y
+compris une journée vide. La comparaison porte maintenant sur une empreinte
+du brouillon (`saved.current`), donc rien ne part si rien n'a bougé.
+
+Vérifié en conditions réelles : 19 assertions Playwright (Supabase simulé au
+niveau réseau, ce qui permet de couper l'envoi à l'instant voulu) — échec
+annoncé, journée gardée, saisie retrouvée après rechargement hors-ligne,
+reprise manuelle, reprise automatique au retour du réseau, rattrapage depuis
+un autre écran, cloisonnement entre comptes, et aucune écriture parasite à
+l'ouverture d'une journée.
 
 ## PWA
 
@@ -376,6 +428,12 @@ ressembler à un site généré par IA.**
   2. `/jour/<date invalide>` tombait en 500 — `Intl.DateTimeFormat` lève
      sur une date invalide, et le segment vient de l'URL. Ajout de
      `isValidISODate()` dans `src/lib/date.ts` et d'un `notFound()`.
+
+- **Sauvegarde à l'épreuve du réseau** : file d'attente locale cloisonnée
+  par compte, échec annoncé, reprise manuelle et automatique, rattrapage en
+  arrière-plan (voir § Sauvegarde). 19 assertions Playwright au vert.
+- **Navigation basse refondue en capsule** avec pastille glissante et trois
+  icônes dessinées pour ces écrans (`JournalIcon`, `RingIcon`, `TrendIcon`).
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

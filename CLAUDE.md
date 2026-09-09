@@ -209,9 +209,13 @@ toute première direction, n'existe plus que dans l'historique Git.
 
 ## Déploiement
 
-- **Hébergement : Vercel**, projet `endo` (compte `thebestsam37-1731`),
-  déployé via la CLI (`vercel deploy --prod`), pas encore relié à Git.
-  Production : **https://endo-seven.vercel.app**
+- **Hébergement : Vercel**, projet `endo` (compte `thebestsam37-1731`, offre
+  Hobby), déployé via la CLI (`vercel deploy --prod`), pas encore relié à
+  Git. Production : **https://endo-seven.vercel.app**
+- **`vercel.json` fixe la région des fonctions à `cdg1` (Paris)**, au plus
+  près de la base. À ne pas supprimer — voir § Vitesse de navigation pour
+  les mesures. Le choix de région fonctionne bien en offre Hobby, contrairement
+  à ce qu'on pourrait craindre.
 - Les deux variables `NEXT_PUBLIC_SUPABASE_*` sont posées sur le projet
   Vercel (cibles production/preview/development) — `.env.local` n'est
   jamais envoyé. Vérifié : elles sont bien compilées dans le bundle
@@ -339,13 +343,16 @@ l'ouverture d'une journée.
 
 ## Vitesse de navigation
 
-Mesuré en production (avec une vraie session) : un changement d'onglet
-coûtait **400 à 900 ms** d'aller-retour serveur, pendant lesquelles rien ne
-bougeait à l'écran. Les trois écrans sont dynamiques (`ƒ`) parce que
-`(app)/layout.tsx` lit les cookies pour vérifier la session ; s'y ajoute le
-`getUser()` du proxy (~150 ms) sur chaque requête, y compris les requêtes RSC.
+### Ce qu'on ressent, et ce que ça coûte vraiment
 
-Deux corrections, sans toucher au modèle d'authentification :
+Mesuré en production avec une vraie session : un changement d'onglet demande
+un aller-retour serveur d'environ **500 ms**, mais **l'écran répond en
+~100 ms** — la pastille suit l'appui et l'écran d'attente est déjà en cache.
+Les deux chiffres sont vrais, ils ne mesurent pas la même chose ; ne pas
+« optimiser » le second en croyant corriger le premier.
+
+Deux corrections avaient rendu la barre vive, sans toucher au modèle
+d'authentification :
 - **`src/app/(app)/loading.tsx`** — sans frontière de chargement, Next.js ne
   peut *rien* précharger d'une route dynamique : le `<Link>` de la barre
   n'avait rien en cache et l'écran restait figé sur la page précédente. Avec
@@ -354,12 +361,36 @@ Deux corrections, sans toucher au modèle d'authentification :
   marges) pour que la transition passe inaperçue.
 - **Pastille optimiste** dans `BottomNav` (voir § Direction artistique).
 
-Si un jour il faut aller plus loin, le levier restant est le `getUser()` du
-proxy : le remplacer par une vérification locale du JWT rendrait la
-navigation encore plus rapide, mais c'est un vrai choix de sécurité à
-peser — ne pas le faire à la légère (l'app ne lit aucune donnée côté
-serveur, tout passe par la RLS côté client, donc le risque est faible, mais
-ça mérite d'être décidé, pas subi).
+### ⚠️ La fonction doit rester à Paris (`vercel.json`)
+
+Les fonctions Vercel tournaient à **Washington (`iad1`)**, la base Supabase
+est à **Paris (`eu-west-3`)** : chaque accès à la base traversait
+l'Atlantique. `vercel.json` fixe désormais `"regions": ["cdg1"]` (Paris).
+**Ne pas retirer ce fichier** — le réglage du projet côté Vercel, lui, est
+toujours sur `iad1`, c'est `vercel.json` qui le remplace au déploiement.
+
+Mesuré par A/B, avec une sonde temporaire qui chronométrait depuis la
+fonction elle-même (déployée, mesurée, retirée) :
+
+| depuis la fonction | `iad1` (Washington) | `cdg1` (Paris) |
+| --- | --- | --- |
+| valider une session | 285 ms | **32 ms** |
+| une requête sur la base | 277 ms | **36 ms** |
+
+Piège de méthode, à retenir : **mesuré depuis un conteneur américain, le
+changement ne se voyait pas** — rapprocher la fonction de la base l'éloignait
+d'autant de moi, et les deux effets s'annulaient. Il a fallu chronométrer
+*à l'intérieur* de la fonction pour voir le gain. Pour quelqu'un en France,
+où le point d'entrée Vercel est déjà Paris, il n'y a pas de contrepartie :
+c'est tout bénéfice.
+
+Si un jour il faut aller plus loin, le levier restant est le **doublon de
+validation** : le proxy et `(app)/layout.tsx` appellent tous deux `getUser()`.
+En retirer un économiserait une trentaine de millisecondes — beaucoup moins
+qu'avant le changement de région, donc la question n'est plus vraiment
+posée. C'est de toute façon un choix de sécurité à peser : l'app ne lit
+aucune donnée côté serveur, tout passe par la RLS côté client, mais ça
+mérite d'être décidé, pas subi.
 
 ## La journée entière, une question par écran
 

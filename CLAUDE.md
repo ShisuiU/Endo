@@ -59,9 +59,17 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
   pendant une crise.
 - Filets fins (`.hairline`) plutôt que des cards à ombre portée. Sur fond
   sombre, c'est l'écart de valeur qui sépare les plans.
-- Composants faits main : `ScoreSlider`, `Toggle`, `TagInput`, `Field`
-  (libellé montant), `MonthRing`, `TrendLine`. Aucune librairie d'UI ni de
-  charts.
+- Composants faits main : `Toggle`, `TagInput`, `Field` (libellé montant),
+  `MonthRing`, `TrendLine`. Aucune librairie de composants ni de charts.
+- **Exception assumée** : `RangeSlider`
+  (`src/components/ui/be-ui-range-slider.tsx`) est adapté d'un composant du
+  catalogue 21st, à la demande de l'utilisatrice. Il porte les notes de 0 à
+  10 via `ScoreSlider`. Adapté, pas collé : piste à 48 px au lieu de 40,
+  tokens Nocturne au lieu des variables shadcn, `cn` du projet au lieu d'un
+  doublon, prop `unset` ajoutée pour distinguer « 0 » de « non renseigné »,
+  et repères réalignés (l'original les décale jusqu'à 9 px de la poignée à
+  fond d'échelle). Apporte les dépendances `motion`, `clsx`,
+  `tailwind-merge`.
 - **Calendrier en anneau** (`MonthRing`) plutôt qu'en grille : une grille de
   tableur ne raconte rien d'un cycle. Les jours restent ouvrables grâce à
   des secteurs de clic transparents (72 × 56 px de boîte englobante, mesuré).
@@ -239,7 +247,13 @@ toute première direction, n'existe plus que dans l'historique Git.
   `@theme inline` dans `globals.css` — ne pas ajouter de couleurs en dur
   dans les composants, étendre la palette là-bas.
 - Pas de librairie de composants UI (shadcn, MUI...) ni de librairie de
-  charts — tout est fait main pour tenir la direction artistique.
+  charts — tout est fait main pour tenir la direction artistique. Seule
+  exception à ce jour : `RangeSlider`, adapté du catalogue 21st sur demande
+  explicite (voir § Direction artistique).
+- `cn` (`src/lib/cn.ts`) s'appuie sur `clsx` + `tailwind-merge` : les
+  conflits de classes Tailwind sont résolus, la dernière l'emporte. Un
+  composant peut donc accepter un `className` qui écrase ses valeurs par
+  défaut.
 
 ## PWA
 
@@ -292,7 +306,9 @@ ressembler à un site généré par IA.**
 - Ne pas ajouter de librairie de composants (shadcn/MUI/Chakra) ni de
   librairie de charts (Recharts/Chart.js...) — composer avec les
   primitives existantes dans `src/components/ui/` et `src/components/
-  stats/`.
+  stats/`. Un composant tiers ne s'intègre qu'adapté : tokens du projet,
+  cibles tactiles ≥ 44 px, `cn` du projet, et vérification que
+  l'interaction reste possible sans glisser (WCAG 2.5.7).
 - Ne pas revenir à des cards à ombre portée générique — garder les filets
   fins (`.hairline`).
 - Ne pas ajouter d'animation "fade-in au scroll" par défaut sans

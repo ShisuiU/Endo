@@ -91,6 +91,27 @@ body {
   border-radius: 4px;
 }
 
+/* Halo respirant derrière l'appel à noter la journée, sur l'accueil. Il ne
+   décore pas : c'est le seul élément de la page qui bouge, donc c'est lui
+   qu'on regarde. Lent (7 s) et de faible amplitude — un carnet ouvert le
+   soir, pas une notification. Opacité et échelle uniquement : rien qui
+   force un recalcul de mise en page. */
+@keyframes breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.breathe {
+  animation: breathe 7s ease-in-out infinite alternate;
+  will-change: opacity, transform;
+}
+
 /* Une seule intention d'animation dans toute l'app : la transition d'état
    des contrôles. Coupée si la personne a demandé moins de mouvement. */
 @media (prefers-reduced-motion: reduce) {

@@ -54,7 +54,10 @@ export function StatsView() {
               <span className="font-display italic text-[1.5rem] text-foreground ml-3">jours</span>
             </p>
             <p className="text-[0.9rem] text-muted mt-4 leading-relaxed max-w-[32ch]">
-              C&apos;est ta moyenne sur {stats.count} crises enregistrées.
+              C&apos;est ta moyenne sur {stats.count} crises enregistrées
+              {stats.lengths.length > 0 &&
+                ` (${stats.lengths.reduce((a, b) => a + b, 0)} jours au total)`}
+              .
             </p>
             {stats.estimateLabel && (
               <p className="mt-4 inline-block hairline rounded-full px-4 py-2.5 text-[0.85rem]">

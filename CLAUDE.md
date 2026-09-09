@@ -379,6 +379,16 @@ Trois règles tiennent le parcours :
   courant est borné (`safeIndex`) : répondre « non » à la crise pourrait
   sinon pointer au-delà de la liste.
 
+**L'appel à noter la journée est le premier élément de l'accueil**
+(`src/components/daily/day-call.tsx`). Une session de cette app, c'est très
+souvent *ça et rien d'autre* : on ouvre, on remplit, on referme. Il porte donc
+le seul mouvement de la page — un halo corail qui respire lentement (7 s,
+opacité et échelle uniquement) derrière un bouton de 64 px. **Le halo s'éteint
+dès que les quatre notes sont données** : il n'y a plus rien à réclamer, et
+l'accueil redevient un écran de lecture. Le titre change avec l'état
+(« Comment s'est passée ta journée ? » / « Il reste des questions. » /
+« Journée notée. »).
+
 L'accueil ne sert plus à saisir, mais à **relire** : le résumé reprend
 l'ordre du parcours (crise, les quatre notes en chiffres, médicament, repas,
 notes) et **chaque ligne est tapable** — elle ouvre le parcours directement à
@@ -408,6 +418,41 @@ posée sur un écran d'accueil :
 - **`id` du manifeste reste `/aujourdhui`**. C'est lui qui identifie l'app
   installée : le changer ferait apparaître un second raccourci au lieu de
   mettre à jour le premier. Ne pas « corriger » cette incohérence apparente.
+
+## Statistiques — crises groupées en épisodes
+
+Une crise d'endométriose dure rarement une seule journée. `stats.ts`
+comptait chaque **jour** de crise comme une crise, si bien que trois jours
+consécutifs produisaient deux intervalles d'un jour qui écrasaient la
+moyenne : sur deux mois de données réalistes, l'app annonçait
+« 6 jours entre deux crises » au lieu de 18. `groupEpisodes()` regroupe
+maintenant les jours consécutifs, et les intervalles se mesurent **d'un début
+d'épisode au suivant**. L'écran affiche aussi le total de jours
+(« 3 crises enregistrées (7 jours au total) ») et dit « Crise en cours »
+plutôt qu'une estimation quand l'épisode n'est pas fini.
+
+Ce défaut n'était pas visible avec une base vide ou deux entrées de test :
+il est apparu en peuplant un compte avec deux mois de journées plausibles.
+
+## `scripts/seed-demo.mjs` — peupler un compte
+
+`SUPABASE_ACCESS_TOKEN=sbp_... node scripts/seed-demo.mjs <email> [jours]`
+écrit des journées vraisemblables (crises groupées en début de cycle de 27 à
+30 jours, douleur/sommeil/humeur/énergie corrélés, médicament surtout les
+jours de crise, ~12 % de journées non saisies pour que le carnet ait des
+trous). Générateur déterministe : relancer donne exactement les mêmes
+journées.
+
+Garde-fous, à conserver si le script évolue :
+- il **n'écrase jamais** une journée déjà saisie ;
+- chaque journée écrite porte la marque `[démo]` en fin de notes, et
+  `--clear` ne supprime **que** celles-là ;
+- la clé `service_role` n'est **jamais écrite sur le disque** : soit elle
+  vient de l'environnement, soit le script la demande à la Management API et
+  elle ne vit que dans le processus.
+
+⚠️ Ce sont de fausses données : tant qu'elles sont là, elles se mélangent aux
+vraies dans le calendrier et les repères.
 
 ## PWA
 
@@ -546,6 +591,12 @@ ressembler à un site généré par IA.**
   devenu un résumé relisible dont chaque ligne rouvre sa question. Onglet
   « Aujourd'hui » renommé « Accueil », avec redirection de l'ancienne route.
   23 assertions Playwright au vert.
+
+- **Appel à noter la journée en tête d'accueil**, avec halo respirant qui
+  s'éteint une fois la journée notée. 28 assertions Playwright.
+- **Crises groupées en épisodes** dans les statistiques (défaut révélé par
+  deux mois de données simulées), et `scripts/seed-demo.mjs` pour peupler un
+  compte.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

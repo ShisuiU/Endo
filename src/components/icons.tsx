@@ -116,6 +116,15 @@ export function ChartIcon(props: IconProps) {
   );
 }
 
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4.2 12h15.1" />
+      <path d="M13.6 6.1 19.4 12l-5.8 5.9" />
+    </svg>
+  );
+}
+
 export function ChevronLeftIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

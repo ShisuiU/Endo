@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CardLabel } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { DayCall } from "@/components/daily/day-call";
 import { DayWizard, type WizardStep } from "@/components/daily/day-wizard";
 import { DaySummary, type SummaryItem } from "@/components/daily/day-summary";
 import { currentUserId, fetchEntry, upsertEntry } from "@/lib/entries-client";
@@ -149,6 +149,17 @@ export function DailyEntryForm({ date }: { date: string }) {
 
   const closeWizard = useCallback(() => setWizardAt(null), []);
 
+  // Répondre « aucune crise » efface l'intensité : sans ça, une intensité
+  // saisie puis annulée restait en base, invisible à l'écran mais bien
+  // présente dans les données.
+  const setCrisis = useCallback((value: boolean) => {
+    setDraft((prev) => ({
+      ...prev,
+      had_crisis: value,
+      crisis_intensity: value ? prev.crisis_intensity : null,
+    }));
+  }, []);
+
   useEffect(() => {
     if (!hydrated.current) return;
     const snapshot = fingerprint(draft);
@@ -195,7 +206,7 @@ export function DailyEntryForm({ date }: { date: string }) {
       value: draft.had_crisis,
       offLabel: "Aucune",
       onLabel: "Oui",
-      onChange: (v) => update("had_crisis", v),
+      onChange: setCrisis,
     },
     ...(draft.had_crisis
       ? [
@@ -324,7 +335,8 @@ export function DailyEntryForm({ date }: { date: string }) {
   ];
 
   // « Compléter » tant qu'une note manque, « Revoir » quand tout est répondu.
-  const complete = steps.every((s) => s.kind !== "score" || s.value !== null);
+  const missing = steps.filter((s) => s.kind === "score" && s.value === null).length;
+  const complete = missing === 0;
 
   const blank = isBlank(draft);
 
@@ -343,24 +355,32 @@ export function DailyEntryForm({ date }: { date: string }) {
         </div>
       </header>
 
-      <section className="py-7">
-        <CardLabel>{blank ? "La journée" : "Résumé du jour"}</CardLabel>
+      <DayCall
+        headline={
+          blank
+            ? "Comment s'est passée ta journée ?"
+            : complete
+              ? "Journée notée."
+              : "Il reste des questions."
+        }
+        detail={
+          blank
+            ? "Crise, douleur, sommeil, humeur, énergie, médicament, repas — une question à la fois, rien d'obligatoire."
+            : complete
+              ? "Tout est noté. Tu peux revenir dessus quand tu veux."
+              : `${missing} ${missing > 1 ? "notes n'ont" : "note n'a"} pas encore été donnée${missing > 1 ? "s" : ""}.`
+        }
+        action={blank ? "Évaluer la journée" : complete ? "Revoir la journée" : "Compléter la journée"}
+        glow={!complete}
+        onStart={() => setWizardAt(blank ? 0 : firstUnanswered)}
+      />
 
-        {blank ? (
-          <p className="mb-5 text-[0.9rem] leading-relaxed text-muted">
-            Crise, douleur, sommeil, humeur, énergie, médicament, repas — une
-            question à la fois, rien d&apos;obligatoire.
-          </p>
-        ) : (
-          <div className="mb-5">
-            <DaySummary items={items} onOpen={setWizardAt} />
-          </div>
-        )}
-
-        <Button className="w-full" onClick={() => setWizardAt(blank ? 0 : firstUnanswered)}>
-          {blank ? "Évaluer la journée" : complete ? "Revoir la journée" : "Compléter la journée"}
-        </Button>
-      </section>
+      {!blank && (
+        <section className="pb-8">
+          <CardLabel>Résumé du jour</CardLabel>
+          <DaySummary items={items} onOpen={setWizardAt} />
+        </section>
+      )}
 
       {wizardAt !== null && (
         <DayWizard steps={steps} startAt={wizardAt} onClose={closeWizard} />

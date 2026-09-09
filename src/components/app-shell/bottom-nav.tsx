@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -12,21 +13,28 @@ import { cn } from "@/lib/cn";
  *
  * Pourquoi ce parti pris : la barre à trois libellés occupait toute la
  * largeur pour répéter en permanence ce qu'on sait déjà. Ici l'encombrement
- * tombe à une capsule, le nom n'apparaît que là où il sert — sur l'écran
- * où l'on est — et la pastille glisse d'un onglet à l'autre, ce qui montre
- * le déplacement au lieu de le faire deviner.
+ * tombe à une capsule, le nom n'apparaît que là où il sert, et la pastille
+ * glisse d'un onglet à l'autre — on voit le déplacement au lieu de le
+ * deviner.
  *
- * Trois choses tiennent le dessin :
- *  — la capsule est `sticky` : elle reste au pouce quel que soit le
- *    défilement, sans jamais recouvrir la fin du formulaire (une position
- *    collante garde sa place dans le flux) ;
- *  — chaque cible fait 56 px de haut, y compris les onglets réduits à leur
- *    icône, avec la marge de sécurité iOS sous la capsule ;
- *  — le libellé visible est marqué `aria-hidden`, le nom complet passe par
- *    `aria-label` : un lecteur d'écran annonce les trois destinations de la
- *    même façon, qu'elles soient ouvertes ou repliées.
+ * Deux points de géométrie, appris à l'usage :
  *
- * L'animation est portée par `motion` (déjà présent pour la réglette) et
+ *  1. **Les trois emplacements font exactement le même tiers de la barre**
+ *     (`flex-1 min-w-0`), et la pastille se contente de déborder du sien.
+ *     Une première version élargissait l'onglet actif : les icônes voisines
+ *     se décalaient d'un coup, en CSS, pendant que la pastille glissait, elle,
+ *     sur un ressort — deux mouvements désaccordés. Ici rien ne bouge sauf la
+ *     pastille.
+ *  2. **La pastille suit l'appui, pas le serveur.** Les écrans sont rendus
+ *     dynamiquement : un changement d'onglet demande un aller-retour de 400 à
+ *     900 ms. Attendre `usePathname` pour déplacer la pastille rendait la
+ *     barre inerte pendant tout ce temps. On note la destination à l'appui,
+ *     et la vraie route reprend la main dès qu'elle arrive.
+ *
+ * Le reste : cibles de 56 px, capsule `sticky` (elle garde sa place dans le
+ * flux, donc ne recouvre jamais la fin du formulaire), libellé visible en
+ * `aria-hidden` et nom complet en `aria-label` pour que les trois
+ * destinations s'annoncent pareil, ouvertes ou repliées. L'animation
  * s'efface entièrement sous `prefers-reduced-motion`.
  */
 const ITEMS = [
@@ -42,6 +50,18 @@ export function BottomNav() {
   const reduce = useReducedMotion();
   const transition = reduce ? { duration: 0 } : GLIDE;
 
+  const routed = ITEMS.find((item) => pathname?.startsWith(item.href))?.href ?? null;
+  const [tapped, setTapped] = useState<string | null>(null);
+  // Dès que la route demandée est arrivée, c'est elle qui fait foi — on lâche
+  // la destination optimiste (ajustement d'état pendant le rendu, sans effet
+  // ni rendu intermédiaire visible).
+  const lastRouted = useRef(routed);
+  if (lastRouted.current !== routed) {
+    lastRouted.current = routed;
+    if (tapped !== null) setTapped(null);
+  }
+  const active = tapped ?? routed;
+
   return (
     <div
       className="sticky bottom-0 z-30 px-4 pt-8 bg-gradient-to-t from-background via-background to-transparent"
@@ -49,36 +69,34 @@ export function BottomNav() {
     >
       <nav
         aria-label="Navigation principale"
-        className="mx-auto flex w-full max-w-[22rem] items-center gap-1 rounded-full hairline bg-surface/80 p-1.5 backdrop-blur"
+        className="mx-auto flex w-full max-w-[22rem] items-center rounded-full hairline bg-surface/80 p-1.5 backdrop-blur"
       >
         {ITEMS.map(({ href, label, Icon }) => {
-          const active = pathname?.startsWith(href) ?? false;
+          const on = active === href;
           return (
             <Link
               key={href}
               href={href}
               aria-label={label}
-              aria-current={active ? "page" : undefined}
+              aria-current={on ? "page" : undefined}
+              onClick={() => setTapped(href)}
               className={cn(
-                "flex min-h-[56px] items-center justify-center rounded-full transition-colors duration-200",
-                // L'onglet actif prend la place restante — la zone tapable
-                // s'élargit avec lui, la pastille visible reste ajustée à son
-                // libellé.
-                active ? "flex-1 text-accent" : "w-14 shrink-0 text-muted hover:text-foreground"
+                "flex min-h-[56px] min-w-0 flex-1 items-center justify-center rounded-full transition-colors duration-200",
+                on ? "text-accent" : "text-muted hover:text-foreground"
               )}
             >
               <motion.span
                 layout
-                layoutId={active ? "nav-pill" : undefined}
+                layoutId={on ? "nav-pill" : undefined}
                 transition={transition}
                 className={cn(
                   "flex min-h-[48px] items-center justify-center gap-2 rounded-full px-4",
-                  active && "bg-surface-2 hairline"
+                  on && "bg-surface-2 hairline"
                 )}
               >
                 <Icon className="w-5 h-5 shrink-0" />
                 <AnimatePresence initial={false}>
-                  {active && (
+                  {on && (
                     <motion.span
                       key="label"
                       aria-hidden

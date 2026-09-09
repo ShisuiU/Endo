@@ -85,6 +85,17 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
   place dans le flux). Le libellé visible est `aria-hidden`, le nom passe
   par `aria-label` — les trois destinations s'annoncent pareil, ouvertes
   ou repliées.
+  **Deux points de géométrie appris à l'usage, à ne pas défaire :**
+  1. Les trois emplacements font exactement le même tiers de la barre
+     (`flex-1 min-w-0`) et la pastille déborde du sien. Une première
+     version élargissait l'onglet actif : les icônes voisines sautaient
+     d'un coup, en CSS, pendant que la pastille glissait sur un ressort —
+     deux mouvements désaccordés, signalés par l'utilisatrice. Tout part
+     maintenant du même ressort, et un onglet non concerné ne bouge pas
+     d'un pixel (vérifié : 0 px).
+  2. La pastille suit l'appui, pas le serveur (`tapped` optimiste, la
+     route reprend la main à son arrivée) : 128 ms de réaction au lieu
+     d'attendre l'aller-retour.
 - Micro-interactions : sauvegarde automatique silencieuse mais **jamais
   muette en cas d'échec** (voir § Sauvegarde), transitions d'état des
   contrôles. `prefers-reduced-motion` coupe tout globalement, y compris
@@ -307,6 +318,30 @@ reprise manuelle, reprise automatique au retour du réseau, rattrapage depuis
 un autre écran, cloisonnement entre comptes, et aucune écriture parasite à
 l'ouverture d'une journée.
 
+## Vitesse de navigation
+
+Mesuré en production (avec une vraie session) : un changement d'onglet
+coûtait **400 à 900 ms** d'aller-retour serveur, pendant lesquelles rien ne
+bougeait à l'écran. Les trois écrans sont dynamiques (`ƒ`) parce que
+`(app)/layout.tsx` lit les cookies pour vérifier la session ; s'y ajoute le
+`getUser()` du proxy (~150 ms) sur chaque requête, y compris les requêtes RSC.
+
+Deux corrections, sans toucher au modèle d'authentification :
+- **`src/app/(app)/loading.tsx`** — sans frontière de chargement, Next.js ne
+  peut *rien* précharger d'une route dynamique : le `<Link>` de la barre
+  n'avait rien en cache et l'écran restait figé sur la page précédente. Avec
+  elle, la coquille est préchargée dès que la barre est visible et s'affiche à
+  l'appui. Le gabarit reprend le rythme réel des écrans (filets fins, mêmes
+  marges) pour que la transition passe inaperçue.
+- **Pastille optimiste** dans `BottomNav` (voir § Direction artistique).
+
+Si un jour il faut aller plus loin, le levier restant est le `getUser()` du
+proxy : le remplacer par une vérification locale du JWT rendrait la
+navigation encore plus rapide, mais c'est un vrai choix de sécurité à
+peser — ne pas le faire à la légère (l'app ne lit aucune donnée côté
+serveur, tout passe par la RLS côté client, donc le risque est faible, mais
+ça mérite d'être décidé, pas subi).
+
 ## PWA
 
 - **Manifest** : `src/app/manifest.ts` (route générée
@@ -434,6 +469,10 @@ ressembler à un site généré par IA.**
   arrière-plan (voir § Sauvegarde). 19 assertions Playwright au vert.
 - **Navigation basse refondue en capsule** avec pastille glissante et trois
   icônes dessinées pour ces écrans (`JournalIcon`, `RingIcon`, `TrendIcon`).
+
+- **Navigation rendue instantanée** : frontière de chargement pour permettre
+  le préchargement, pastille optimiste, emplacements de largeur fixe.
+  6 assertions Playwright (avec latence serveur simulée).
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

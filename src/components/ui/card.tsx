@@ -2,14 +2,18 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * Bloc de contenu : filet fin sur fond légèrement relevé, jamais d'ombre
- * portée. Sur fond sombre, c'est l'écart de valeur qui sépare les plans.
+ * ⚠️ Il n'y a **pas** de composant `Card` dans ce projet, et c'est
+ * volontaire.
+ *
+ * Il en a existé un — bloc arrondi sur fond relevé — jusqu'à ce que
+ * l'utilisatrice rejette les trois derniers endroits qui s'en servaient :
+ * « des blocs qui ressemblent à n'importe quelle IA » (voir CLAUDE.md
+ * § Le jour où deux blocs génériques sont passés). La page est un carnet,
+ * pas un tableau de bord : ce qui sépare les plans, ce sont les filets fins
+ * et la typographie, jamais un cadre.
+ *
+ * Reste ici l'intertitre, qui lui n'a rien d'une carte.
  */
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("hairline rounded-2xl bg-surface p-5", className)} {...props} />
-  );
-}
 
 /** Intertitre en petites capitales très espacées — le repère éditorial. */
 export function CardLabel({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {

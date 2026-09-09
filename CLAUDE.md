@@ -61,6 +61,9 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
   sombre, c'est l'écart de valeur qui sépare les plans.
 - Composants faits main : `Toggle`, `TagInput`, `Field` (libellé montant),
   `MonthRing`, `TrendLine`. Aucune librairie de composants ni de charts.
+  **Il n'y a volontairement pas de composant `Card`** — il a existé, il a été
+  supprimé avec les blocs qu'il servait. `src/components/ui/card.tsx` ne
+  contient plus que l'intertitre `CardLabel`, et dit pourquoi.
 - **Exception assumée** : `RangeSlider`
   (`src/components/ui/be-ui-range-slider.tsx`) est adapté d'un composant du
   catalogue 21st, à la demande de l'utilisatrice. Il porte les notes de 0 à

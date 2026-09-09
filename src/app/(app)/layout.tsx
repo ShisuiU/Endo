@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "../(auth)/actions";
 import { Wordmark } from "@/components/ui/wordmark";
-import { LogoutIcon } from "@/components/icons";
+import Link from "next/link";
+import { SettingsIcon } from "@/components/icons";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { PendingSync } from "@/components/daily/pending-sync";
@@ -25,15 +25,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       >
         <Wordmark />
-        <form action={signOut}>
-          <button
-            type="submit"
-            aria-label="Se déconnecter"
-            className="w-11 h-11 -mr-2 flex items-center justify-center text-muted hover:text-foreground"
-          >
-            <LogoutIcon className="w-5 h-5" />
-          </button>
-        </form>
+        {/* La déconnexion a rejoint les réglages : elle n'a rien à faire en
+            permanence sous le pouce, à côté du logotype. */}
+        <Link
+          href="/reglages"
+          aria-label="Réglages"
+          className="w-11 h-11 -mr-2 flex items-center justify-center text-muted hover:text-foreground"
+        >
+          <SettingsIcon className="w-5 h-5" />
+        </Link>
       </header>
 
       <main className="flex-1 flex flex-col">{children}</main>

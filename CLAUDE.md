@@ -183,7 +183,8 @@ toute première direction, n'existe plus que dans l'historique Git.
   src/app/
     (auth)/connexion, (auth)/inscription, (auth)/actions.ts   — auth (Server Actions)
     (app)/accueil, (app)/calendrier, (app)/jour/[date],
-          (app)/statistiques, (app)/layout.tsx                — zone connectée (nav, garde d'auth)
+          (app)/statistiques, (app)/reglages,
+          (app)/layout.tsx                                     — zone connectée (nav, garde d'auth)
     manifest.ts, layout.tsx, globals.css                       — shell + PWA
   src/components/
     ui/            — Button, Card, ScoreSlider, Toggle, TagInput, Wordmark
@@ -197,7 +198,8 @@ toute première direction, n'existe plus que dans l'historique Git.
     app-shell/      — barre de navigation basse (capsule + pastille glissante)
   src/lib/
     supabase/       — clients browser/server/proxy + types
-    entries-client.ts, pending-entries.ts, date.ts, stats.ts, cn.ts
+    entries-client.ts, profile-client.ts, pending-entries.ts,
+    csv.ts, date.ts, stats.ts, cn.ts
   supabase/migrations/0001_init.sql
   scripts/generate-icons.mjs   — génère public/icons + public/splash
   ```
@@ -465,6 +467,60 @@ Garde-fous, à conserver si le script évolue :
 ⚠️ Ce sont de fausses données : tant qu'elles sont là, elles se mélangent aux
 vraies dans le calendrier et les repères.
 
+## Réglages — `/reglages`
+
+Quatrième écran, **volontairement absent de la barre du bas** : elle reste à
+trois onglets (sa géométrie en tiers en dépend, voir § Direction
+artistique). On y accède par l'icône de l'en-tête — deux réglettes décalées
+plutôt qu'une roue dentée, parce que l'app est faite de réglettes et que le
+réflexe de la roue dentée est générique.
+
+- **Ton compte** — email, prénom, déconnexion. Le prénom (`profiles.
+  display_name`) était recueilli à l'inscription et stocké par le trigger,
+  mais **jamais relu nulle part** : les réglages le rendent enfin visible et
+  modifiable. Il s'enregistre au fil de la frappe, comme le carnet.
+  La déconnexion reste une Server Action — c'est le serveur qui doit effacer
+  les cookies de session. Vérifié : plus aucun cookie `sb-*-auth-token`
+  après coup.
+- **Tes données** — export CSV et effacement total.
+- **L'app** — le geste d'installation iOS, rappelé au calme (l'invite
+  automatique, elle, ne s'affiche qu'une fois).
+
+### Export CSV
+
+`src/lib/csv.ts`. Deux choix qui ne s'improvisent pas :
+- **séparateur `;` et BOM UTF-8** — c'est ce qu'attend Excel en
+  configuration française. Sans le BOM les accents sortent en mojibake ;
+  avec une virgule, tout atterrit dans une seule colonne ;
+- **échappement** des champs contenant `;`, `"` ou un saut de ligne
+  (guillemets doublés) — les notes libres en contiennent forcément un jour.
+
+Sur iPhone, un `<a download>` en mode standalone ne donne rien de fiable. On
+passe donc par `navigator.share({ files })` quand le navigateur l'accepte —
+la feuille de partage sait où envoyer le fichier (Fichiers, Mail, un message
+au médecin) — et on retombe sur le téléchargement classique ailleurs.
+Annuler la feuille de partage lève une `AbortError` : ce n'est pas un échec,
+elle est absorbée sans message d'erreur.
+
+### Suppressions
+
+Deux niveaux, tous deux à confirmation en deux temps :
+- **une journée**, depuis `/jour/[date]` uniquement — l'accueil ne se
+  supprime pas lui-même, on y revient tous les jours. La journée en attente
+  éventuelle est retirée de la file locale **avant** l'appel réseau, sinon
+  `PendingSync` la réécrirait juste après ;
+- **toutes les journées**, depuis les réglages, avec un rappel de faire un
+  export d'abord.
+
+Les deux requêtes filtrent sur `user_id` en plus de la RLS : même si une
+policy venait à changer, la suppression ne peut viser que ses propres lignes.
+
+21 assertions Playwright : accès depuis l'en-tête, barre du bas toujours à
+trois onglets, prénom relu puis enregistré sans validation, nom de fichier
+daté, BOM, en-têtes, échappement des guillemets et points-virgules,
+confirmation et renoncement, retour au calendrier après suppression,
+effacement total.
+
 ## PWA
 
 - **Manifest** : `src/app/manifest.ts` (route générée
@@ -609,6 +665,12 @@ ressembler à un site généré par IA.**
   deux mois de données simulées), et `scripts/seed-demo.mjs` pour peupler un
   compte.
 
+- **Écran Réglages** (`/reglages`) : compte, prénom enfin relu et
+  modifiable, déconnexion, export CSV, effacement total, rappel du geste
+  d'installation. 21 assertions Playwright.
+- **Suppression d'une journée** depuis son écran, et **export CSV** — les
+  deux dernières tâches en attente de la liste.
+
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,
   et il ne peut pas être fait depuis une session Claude Code : Safari →
@@ -618,9 +680,10 @@ ressembler à un site généré par IA.**
 - Éventuel : `vercel git connect` pour les déploiements automatiques à
   chaque push, et définir `main` comme branche par défaut côté GitHub.
 
-- Éventuel : export CSV des données, rappel de médicament programmable,
-  édition/suppression explicite d'une entrée depuis le calendrier (l'édition
-  fonctionne déjà via `/jour/[date]`, mais pas de suppression dédiée).
+- Éventuel : rappel de médicament programmable — suppose des notifications
+  push, que Safari iOS ne sert qu'en mode standalone et au prix d'un vrai
+  travail (permission, service worker, envoi côté serveur). Rien d'autre
+  n'est en attente : export CSV et suppression sont faits.
 - Icône `favicon.ico` actuelle est un simple PNG 32×32 renommé — suffisant
   pour tous les navigateurs modernes, mais pas un vrai multi-résolution
   `.ico` si besoin d'une compatibilité IE historique (non pertinent ici).

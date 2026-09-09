@@ -5,7 +5,7 @@ import { CardLabel } from "@/components/ui/card";
 import { DayCall } from "@/components/daily/day-call";
 import { DayWizard, type WizardStep } from "@/components/daily/day-wizard";
 import { DaySummary, type SummaryItem } from "@/components/daily/day-summary";
-import { currentUserId, fetchEntry, upsertEntry } from "@/lib/entries-client";
+import { currentUserId, deleteEntry, fetchEntry, upsertEntry } from "@/lib/entries-client";
 import {
   claimDate,
   clearPending,
@@ -13,6 +13,7 @@ import {
   releaseDate,
   writePending,
 } from "@/lib/pending-entries";
+import { TrashIcon } from "@/components/icons";
 import { dateParts } from "@/lib/date";
 import type { DailyEntry, DailyEntryInput } from "@/lib/supabase/types";
 
@@ -91,12 +92,22 @@ const fingerprint = (draft: Draft) => JSON.stringify(draft);
 /** La journée a-t-elle été touchée ? Sert à choisir le libellé du bouton. */
 const isBlank = (draft: Draft) => fingerprint(draft) === fingerprint(EMPTY_DRAFT);
 
-export function DailyEntryForm({ date }: { date: string }) {
+export function DailyEntryForm({
+  date,
+  onDeleted,
+}: {
+  date: string;
+  /** Fourni par l'écran d'une journée passée : l'accueil, lui, ne se
+   *  supprime pas — on y revient tous les jours. */
+  onDeleted?: () => void;
+}) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [status, setStatus] = useState<Status>("loading");
   const [retry, setRetry] = useState(0);
   /** Index de la question ouverte dans le parcours, `null` s'il est fermé. */
   const [wizardAt, setWizardAt] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const hydrated = useRef(false);
   const userId = useRef<string | null>(null);
   /** Dernier état connu du serveur : sert de témoin pour ne pas réécrire
@@ -384,6 +395,54 @@ export function DailyEntryForm({ date }: { date: string }) {
 
       {wizardAt !== null && (
         <DayWizard steps={steps} startAt={wizardAt} onClose={closeWizard} />
+      )}
+
+      {onDeleted && !blank && (
+        <section className="pb-8">
+          {confirmDelete ? (
+            <div role="alert" className="hairline rounded-2xl border-accent/40 p-4">
+              <p className="text-[0.85rem] leading-relaxed">
+                Cette journée sera effacée, sans retour possible.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      if (userId.current) clearPending(userId.current, date);
+                      await deleteEntry(date);
+                      onDeleted();
+                    } catch {
+                      setDeleting(false);
+                      setConfirmDelete(false);
+                      setStatus("error");
+                    }
+                  }}
+                  className="min-h-[44px] rounded-full bg-accent px-5 text-[0.85rem] font-medium text-ground disabled:opacity-50"
+                >
+                  {deleting ? "Suppression…" : "Oui, supprimer"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="min-h-[44px] rounded-full px-5 text-[0.85rem] text-muted hover:text-foreground"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-4 text-[0.85rem] text-muted transition-colors hover:text-foreground"
+            >
+              <TrashIcon className="h-4 w-4" /> Supprimer cette journée
+            </button>
+          )}
+        </section>
       )}
 
       {status === "error" ? (

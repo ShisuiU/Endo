@@ -174,6 +174,39 @@ export function NoteIcon(props: IconProps) {
   );
 }
 
+/** Deux réglettes décalées — l'app est faite de réglettes, l'icône aussi.
+ *  Une roue dentée aurait été le réflexe, et le réflexe est générique. */
+export function SettingsIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3.4 8.6h17.2M3.4 15.4h17.2" />
+      <circle cx="9.1" cy="8.6" r="2.3" fill="var(--color-ground)" />
+      <circle cx="15.4" cy="15.4" r="2.3" fill="var(--color-ground)" />
+    </svg>
+  );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3.6v11.2" />
+      <path d="M7.6 10.6 12 15l4.4-4.4" />
+      <path d="M4.2 18.4c2.4.9 5 1.3 7.8 1.3s5.4-.4 7.8-1.3" />
+    </svg>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4.4 6.6h15.2" />
+      <path d="M9.4 6.4V4.7c0-.7.6-1.2 1.3-1.2h2.6c.7 0 1.3.5 1.3 1.2v1.7" />
+      <path d="M6.4 6.6l.9 12.1c.1 1 .9 1.8 1.9 1.8h5.6c1 0 1.8-.8 1.9-1.8l.9-12.1" />
+      <path d="M10.4 10.2v6.4M13.6 10.2v6.4" opacity={0.5} />
+    </svg>
+  );
+}
+
 export function LogoutIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

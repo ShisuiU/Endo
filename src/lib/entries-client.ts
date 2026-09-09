@@ -72,6 +72,60 @@ export async function fetchAllCrisisDates(): Promise<string[]> {
   return (data ?? []).map((row) => row.entry_date);
 }
 
+/** Toutes les journées, de la plus ancienne à la plus récente — pour l'export. */
+export async function fetchAllEntries(): Promise<DailyEntry[]> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("daily_entries")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("entry_date", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Supprime une journée. Le filtre sur `user_id` double la RLS : même si une
+ *  policy venait à changer, la requête ne peut viser que ses propres lignes. */
+export async function deleteEntry(entryDate: string): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Non connecté");
+
+  const { error } = await supabase
+    .from("daily_entries")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("entry_date", entryDate);
+
+  if (error) throw error;
+}
+
+/** Vide le carnet. Irréversible — l'appelant doit avoir fait confirmer. */
+export async function deleteAllEntries(): Promise<number> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Non connecté");
+
+  const { data, error } = await supabase
+    .from("daily_entries")
+    .delete()
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) throw error;
+  return data?.length ?? 0;
+}
+
 export async function upsertEntry(input: DailyEntryInput): Promise<DailyEntry> {
   const supabase = createClient();
   const {

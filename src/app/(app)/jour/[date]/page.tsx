@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeftIcon } from "@/components/icons";
-import { DailyEntryForm } from "@/components/daily/daily-entry-form";
+import { DayScreen } from "./day-screen";
 import { isValidISODate } from "@/lib/date";
 
 export default async function DayPage({
@@ -24,7 +24,7 @@ export default async function DayPage({
           <ChevronLeftIcon className="w-4 h-4" /> Calendrier
         </Link>
       </div>
-      <DailyEntryForm date={date} />
+      <DayScreen date={date} />
     </div>
   );
 }

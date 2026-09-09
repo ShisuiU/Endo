@@ -442,15 +442,25 @@ l'accueil redevient un écran de lecture. Le titre change avec l'état
 (« Comment s'est passée ta journée ? » / « Il reste des questions. » /
 « Journée notée. »).
 
-L'accueil ne sert plus à saisir, mais à **relire** : le résumé reprend
-l'ordre du parcours (crise, les quatre notes en chiffres, médicament, repas,
-notes) et **chaque ligne est tapable** — elle ouvre le parcours directement à
-sa question, pour corriger sans repasser par le reste. Ce sont des lignes
-séparées par des filets, à fleur de marge : **ni fond, ni contour, ni coins
-arrondis** (le bloc-carte d'origine est parti avec les autres, voir § Le jour
-où deux blocs génériques sont passés). Seule la crise garde le corail — c'est
-la seule chose qui doit sauter aux yeux dans ce résumé. Tant que la journée
-est vierge, le résumé laisse place à une simple invitation. Le bouton dit ce
+L'accueil ne sert plus à saisir, mais à **relire**. Le résumé est **une
+phrase**, comme dans un carnet papier : « Crise à 7/10. Douleur 3, sommeil 4,
+humeur 5, énergie 6. Spasfon, 14 h. Riz. « Journée difficile. » » — les
+nombres composés en Bodoni dans le fil du texte, la crise seule en corail.
+**Chaque fragment est tapable** et rouvre le parcours à sa question, pour
+corriger sans repasser par le reste.
+
+Ce sont des cibles *en ligne dans un texte* : la règle de taille minimale
+(WCAG 2.5.8) les exempte explicitement, et l'interligne à 2.1 donne de toute
+façon des lignes d'environ 44 px. Les fragments qui ouvrent une phrase
+prennent une majuscule d'attaque — le texte vient de la saisie, et sans ça on
+lisait « Spasfon, 14 h. riz. »
+
+**Trois versions ont été nécessaires**, les deux premières écartées par
+l'utilisatrice : un bloc-carte, puis une suite de lignes « libellé — valeur ».
+Une liste de paires reste un tableau, quelle que soit la peinture qu'on met
+dessus. Ne pas « ranger » ce résumé en colonnes, en vignettes ou en lignes.
+Tant que la journée est vierge, le résumé laisse place à une simple
+invitation. Le bouton dit ce
 qu'il fait : « Évaluer la journée » / « Compléter la journée » (une note
 manque) / « Revoir la journée ».
 
@@ -508,21 +518,13 @@ au-dessus, et trois nombres coraux dans la même section ne font plus ressortir
 aucun. Ici la hiérarchie vient de la taille et de la police, pas de la
 couleur.
 
-### « À rattraper » sur l'accueil
+### « À rattraper » : supprimé
 
-`src/components/daily/missed-days.tsx`. On oublie de noter — surtout les
-jours de crise, justement. Il fallait ouvrir le calendrier, retrouver le jour
-sur l'anneau et le viser : trois gestes pour rattraper la veille. Les
-journées vides des sept derniers jours sont maintenant posées sur l'accueil,
-en lignes de 56 px séparées par des filets, avec la date composée comme
-partout ailleurs (chiffre en Bodoni, jour en petites capitales). Le mois n'est
-écrit qu'au passage d'un mois à l'autre — dans une fenêtre de sept jours il
-est presque toujours évident, et l'abréger donnait « DIM SEPT. ».
-
-**Le bloc est silencieux quand il n'y a rien à rattraper** — une semaine
-complète n'affiche rien. C'est une aide, pas un reproche : pas de compteur
-de série, pas de « tu as raté 3 jours ». Aujourd'hui n'y figure jamais, il a
-déjà son appel en haut de l'écran.
+Un bloc listait sur l'accueil les journées vides des sept derniers jours, pour
+les rattraper d'un geste. **Retiré à la demande de l'utilisatrice** — ne pas
+le réintroduire sans le lui redemander. Le calendrier reste la porte d'entrée
+des jours passés, et son anneau distingue désormais un jour noté d'un jour
+vide (voir § Direction artistique), ce qui suffit à les repérer.
 
 ## `scripts/seed-demo.mjs` — peupler un compte
 
@@ -649,7 +651,10 @@ a suivi dans la foulée :
   relevé, libellé en petites capitales) sur l'écran Repères ;
 - **des pastilles carrées alignées** pour les jours à rattraper, façon
   sélecteur de dates ;
-- **le résumé du jour** de l'accueil, bloc arrondi sur fond relevé.
+- **le résumé du jour** de l'accueil, bloc arrondi sur fond relevé — puis,
+  au tour suivant, sa version en lignes « libellé — valeur ». Une liste de
+  paires reste un tableau, quelle que soit la peinture. Il a fallu une
+  troisième version, en prose, pour que ça passe.
 
 Les deux respectaient pourtant la palette, les filets fins et les cibles
 tactiles. Ce n'était pas la peinture qui clochait, c'était **le motif** : la
@@ -782,8 +787,10 @@ ressembler à un site généré par IA.**
 
 - **Repères plus honnêtes** : étendue des intervalles sous la moyenne, pas
   d'estimation quand c'est trop irrégulier, durée moyenne d'un épisode et
-  jours avec médicament. **« À rattraper »** sur l'accueil pour les journées
-  vides de la semaine. 9 assertions Playwright.
+  jours avec médicament.
+- **Résumé du jour en prose**, chaque fragment tapable (troisième version,
+  voir § La journée entière). Bloc « À rattraper » retiré.
+  30 assertions Playwright.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

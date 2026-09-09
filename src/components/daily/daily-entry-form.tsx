@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CardLabel } from "@/components/ui/card";
 import { DayCall } from "@/components/daily/day-call";
 import { DayWizard, type WizardStep } from "@/components/daily/day-wizard";
-import { DaySummary, type SummaryItem } from "@/components/daily/day-summary";
+import { DaySummary, type DaySummaryData } from "@/components/daily/day-summary";
 import { currentUserId, deleteEntry, fetchEntry, upsertEntry } from "@/lib/entries-client";
 import {
   claimDate,
@@ -305,45 +305,23 @@ export function DailyEntryForm({
     0
   );
 
-  // L'ordre du résumé est celui du parcours : on relit comme on a répondu.
-  const items: SummaryItem[] = [
-    {
-      kind: "row",
-      step: at("crisis"),
-      label: "Crise",
-      value: draft.had_crisis
-        ? draft.crisis_intensity === null
-          ? "Oui"
-          : `Oui — intensité ${draft.crisis_intensity}/10`
-        : "Aucune",
-      accent: draft.had_crisis,
-    },
-    {
-      kind: "scores",
-      step: at("pain"),
-      scores: SCORES.map(({ key, label }) => ({ key, label, value: draft[key] })),
-    },
-    {
-      kind: "row",
+  // Le résumé reprend l'ordre du parcours : on relit comme on a répondu.
+  const summary: DaySummaryData = {
+    crisis: { step: at("crisis"), had: draft.had_crisis, intensity: draft.crisis_intensity },
+    scores: SCORES.map(({ key, label }) => ({
+      step: at(key === "pain_score" ? "pain" : key === "sleep_score" ? "sleep" : key === "mood_score" ? "mood" : "energy"),
+      key,
+      label,
+      value: draft[key],
+    })),
+    medication: {
       step: at("medication"),
-      label: "Médicament",
-      value: draft.medication_taken ? draft.medication_notes || "Pris" : "Non pris",
+      taken: draft.medication_taken,
+      detail: draft.medication_notes,
     },
-    {
-      kind: "row",
-      step: at("foods"),
-      label: "Repas",
-      value: draft.foods.length > 0 ? draft.foods.join(", ") : "Rien de noté",
-      empty: draft.foods.length === 0,
-    },
-    {
-      kind: "row",
-      step: at("notes"),
-      label: "Notes",
-      value: draft.notes || "Rien de noté",
-      empty: draft.notes === "",
-    },
-  ];
+    foods: { step: at("foods"), list: draft.foods },
+    notes: { step: at("notes"), text: draft.notes },
+  };
 
   // « Compléter » tant qu'une note manque, « Revoir » quand tout est répondu.
   const missing = steps.filter((s) => s.kind === "score" && s.value === null).length;
@@ -389,7 +367,7 @@ export function DailyEntryForm({
       {!blank && (
         <section className="pb-8">
           <CardLabel>Résumé du jour</CardLabel>
-          <DaySummary items={items} onOpen={setWizardAt} />
+          <DaySummary data={summary} onOpen={setWizardAt} />
         </section>
       )}
 

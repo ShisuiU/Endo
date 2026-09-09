@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { DailyEntryForm } from "@/components/daily/daily-entry-form";
-import { MissedDays } from "@/components/daily/missed-days";
 import { todayISO } from "@/lib/date";
 
 export function TodayForm() {
@@ -15,14 +14,5 @@ export function TodayForm() {
   }, []);
 
   if (!date) return null;
-  return (
-    <>
-      <DailyEntryForm date={date} />
-      {/* Sous la journée du jour : les jours récents restés vides, s'il y en
-          a. Le composant ne rend rien quand la semaine est complète. */}
-      <div className="px-6">
-        <MissedDays />
-      </div>
-    </>
-  );
+  return <DailyEntryForm date={date} />;
 }

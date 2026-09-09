@@ -1,94 +1,158 @@
 "use client";
 
-import { ChevronRightIcon } from "@/components/icons";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/** Bloc des quatre notes, en chiffres. */
-export type SummaryScores = {
-  kind: "scores";
-  step: number;
-  scores: { key: string; label: string; value: number | null }[];
+export type DaySummaryData = {
+  crisis: { step: number; had: boolean; intensity: number | null };
+  scores: { step: number; key: string; label: string; value: number | null }[];
+  medication: { step: number; taken: boolean; detail: string };
+  foods: { step: number; list: string[] };
+  notes: { step: number; text: string };
 };
-
-/** Ligne « libellé — valeur ». */
-export type SummaryRow = {
-  kind: "row";
-  step: number;
-  label: string;
-  value: string;
-  /** Grise la valeur quand rien n'a été renseigné. */
-  empty?: boolean;
-  accent?: boolean;
-};
-
-export type SummaryItem = SummaryScores | SummaryRow;
 
 /**
- * Le résumé du jour sur l'écran d'accueil.
+ * Le résumé du jour, **écrit**.
  *
- * L'accueil ne sert plus à saisir — tout passe par le parcours pas à pas —
- * mais à **relire** : ce qui a été dit de la journée, d'un coup d'œil, sans
- * dérouler. Chaque ligne reste tapable et ouvre le parcours directement à
- * sa question, pour corriger sans repasser par tout le reste.
+ * Troisième version. La première était un bloc-carte, la deuxième une suite
+ * de lignes « libellé — valeur » ; les deux ont été écartées, et à raison :
+ * une liste de paires reste un tableau, quelle que soit la peinture qu'on
+ * met dessus. Ici la journée est une phrase, comme dans un carnet papier —
+ * « Crise à 7/10. Douleur 6, sommeil 4… » — avec les nombres composés en
+ * Bodoni dans le fil du texte.
  *
- * L'ordre des blocs est celui du parcours, et c'est le parent qui le donne :
- * on relit dans l'ordre où on a répondu. Les quatre notes ont leur propre
- * bloc en chiffres — ce sont elles qu'on relit le plus, et un chiffre se lit
- * plus vite qu'une phrase.
+ * Chaque fragment reste tapable et rouvre sa question. Ce sont des cibles
+ * *en ligne dans un texte* : la règle de taille minimale (WCAG 2.5.8) les
+ * exempte explicitement, et l'interligne généreux donne de toute façon des
+ * lignes d'environ 44 px.
+ *
+ * ⚠️ Ne pas « ranger » ce résumé en colonnes, en vignettes ou en lignes de
+ * tableau. Voir CLAUDE.md § Le jour où deux blocs génériques sont passés.
  */
 export function DaySummary({
-  items,
+  data,
   onOpen,
 }: {
-  items: SummaryItem[];
+  data: DaySummaryData;
   onOpen: (step: number) => void;
 }) {
+  const { crisis, scores, medication, foods, notes } = data;
+
   return (
-    <ul className="hairline-t">
-      {items.map((item) => (
-        <li key={item.kind === "scores" ? "scores" : item.label} className="hairline-b">
-          <button
-            type="button"
-            onClick={() => onOpen(item.step)}
-            className="flex w-full min-h-[56px] items-center gap-4 py-3 text-left text-muted transition-colors hover:text-foreground"
-          >
-            {item.kind === "scores" ? (
-              <span className="grid flex-1 grid-cols-4 gap-2">
-                {item.scores.map(({ key, label, value }) => (
-                  <span key={key} className="block">
-                    <span className="block text-[0.6rem] uppercase tracking-[0.14em]">
-                      {label}
-                    </span>
-                    <span
-                      className={cn(
-                        "mt-1.5 block font-display italic text-[1.5rem] leading-none tabular",
-                        value === null ? "text-muted/45" : "text-foreground"
-                      )}
-                    >
-                      {value ?? "–"}
-                    </span>
-                  </span>
-                ))}
-              </span>
-            ) : (
-              <>
-                <span className="w-24 shrink-0 text-[0.6rem] uppercase tracking-[0.14em]">
-                  {item.label}
-                </span>
-                <span
-                  className={cn(
-                    "flex-1 truncate text-[0.9rem]",
-                    item.empty ? "text-muted/45" : item.accent ? "text-accent" : "text-foreground"
-                  )}
-                >
-                  {item.value}
-                </span>
-              </>
-            )}
-            <ChevronRightIcon className="h-4 w-4 shrink-0" aria-hidden />
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <p className="text-[1.05rem] leading-[2.1] text-muted">
+        <Bit onOpen={onOpen} step={crisis.step} label="Modifier la crise">
+          {crisis.had ? (
+            <>
+              <Valeur tone="accent">Crise</Valeur>
+              {crisis.intensity !== null && (
+                <>
+                  {" à "}
+                  <Valeur tone="accent">{crisis.intensity}</Valeur>
+                  <span className="text-muted">/10</span>
+                </>
+              )}
+            </>
+          ) : (
+            "Aucune crise"
+          )}
+        </Bit>
+        {". "}
+        {scores.map(({ step, key, label, value }, i) => (
+          <span key={key}>
+            <Bit onOpen={onOpen} step={step} label={`Modifier ${label.toLowerCase()}`}>
+              {i === 0 ? label : label.toLowerCase()} <Valeur>{value ?? "–"}</Valeur>
+            </Bit>
+            {i === scores.length - 1 ? ". " : ", "}
+          </span>
+        ))}
+      </p>
+
+      <p className="mt-1 text-[1.05rem] leading-[2.1] text-muted">
+        <Bit onOpen={onOpen} step={medication.step} label="Modifier le médicament">
+          {medication.taken ? (
+            <Valeur tone="plain">{capitale(medication.detail || "Médicament pris")}</Valeur>
+          ) : (
+            "Pas de médicament"
+          )}
+        </Bit>
+        {". "}
+        <Bit onOpen={onOpen} step={foods.step} label="Modifier les repas">
+          {foods.list.length > 0 ? (
+            <Valeur tone="plain">{capitale(foods.list.join(", "))}</Valeur>
+          ) : (
+            "Rien noté côté repas"
+          )}
+        </Bit>
+        {". "}
+      </p>
+
+      <p className="mt-1 text-[1.05rem] leading-[2.1] text-muted">
+        <Bit onOpen={onOpen} step={notes.step} label="Modifier les notes">
+          {notes.text ? (
+            <span className="italic text-foreground">«&nbsp;{notes.text}&nbsp;»</span>
+          ) : (
+            "Pas de note."
+          )}
+        </Bit>
+      </p>
+
+      <p className="mt-5 text-[0.78rem] text-muted/70">
+        Touche un mot pour revenir sur sa question.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Majuscule d'attaque : ces fragments ouvrent une phrase, et le texte vient
+ * de la saisie (« spasfon », « riz »). Sans ça on lisait « Spasfon, 14 h.
+ * riz. » — une minuscule après un point.
+ */
+const capitale = (texte: string) => texte.charAt(0).toUpperCase() + texte.slice(1);
+
+/** Fragment tapable dans la phrase — rouvre le parcours à sa question. */
+function Bit({
+  step,
+  label,
+  onOpen,
+  children,
+}: {
+  step: number;
+  label: string;
+  onOpen: (step: number) => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={() => onOpen(step)}
+      className="text-left underline decoration-transparent underline-offset-[6px] transition-colors hover:decoration-[color:var(--hairline)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Ce qui a été saisi, composé comme les dates et les scores de l'app. */
+function Valeur({
+  children,
+  tone = "number",
+}: {
+  children: ReactNode;
+  tone?: "number" | "accent" | "plain";
+}) {
+  return (
+    <span
+      className={cn(
+        tone === "plain"
+          ? "text-foreground"
+          : "font-display italic text-[1.35rem] leading-none tabular",
+        tone === "accent" ? "text-accent" : "text-foreground"
+      )}
+    >
+      {children}
+    </span>
   );
 }

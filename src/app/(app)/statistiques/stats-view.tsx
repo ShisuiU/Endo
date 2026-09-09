@@ -34,6 +34,7 @@ export function StatsView() {
   const painValues = dates.map((d) => byDate.get(d)?.pain_score ?? null);
   const sleepValues = dates.map((d) => byDate.get(d)?.sleep_score ?? null);
   const moodValues = dates.map((d) => byDate.get(d)?.mood_score ?? null);
+  const medicatedDays = entries.filter((e) => e.medication_taken).length;
 
   return (
     <div className="px-6 pt-7 pb-12">
@@ -53,16 +54,31 @@ export function StatsView() {
               <span className="text-[5.5rem] text-accent tabular">{stats.averageInterval}</span>
               <span className="font-display italic text-[1.5rem] text-foreground ml-3">jours</span>
             </p>
-            <p className="text-[0.9rem] text-muted mt-4 leading-relaxed max-w-[32ch]">
-              C&apos;est ta moyenne sur {stats.count} crises enregistrées
-              {stats.lengths.length > 0 &&
-                ` (${stats.lengths.reduce((a, b) => a + b, 0)} jours au total)`}
-              .
+            <p className="text-[0.9rem] text-muted mt-4 leading-relaxed max-w-[34ch]">
+              C&apos;est ta moyenne sur {stats.count} crises enregistrées.
+              {/* La moyenne seule ment quand l'écart est large : 6 et 29 jours
+                  donnent « 14 », un intervalle qui n'est jamais arrivé. */}
+              {stats.minInterval !== null && stats.maxInterval !== null &&
+                stats.minInterval !== stats.maxInterval && (
+                  <>
+                    {" "}
+                    Dans les faits, elles se sont espacées de{" "}
+                    <span className="text-foreground tabular">{stats.minInterval}</span> à{" "}
+                    <span className="text-foreground tabular">{stats.maxInterval}</span> jours.
+                  </>
+                )}
             </p>
             {stats.estimateLabel && (
               <p className="mt-4 inline-block hairline rounded-full px-4 py-2.5 text-[0.85rem]">
                 {stats.estimateLabel}
               </p>
+            )}
+
+            {stats.averageLength !== null && (
+              <dl className="mt-8 grid grid-cols-2 gap-4">
+                <Figure value={`${stats.averageLength} j`} label="Durée d'une crise" />
+                <Figure value={`${medicatedDays} j`} label={`Médicament sur ${WINDOW_DAYS} j`} />
+              </dl>
             )}
           </>
         )}
@@ -79,6 +95,20 @@ export function StatsView() {
           </p>
         )}
       </section>
+    </div>
+  );
+}
+
+/** Un chiffre et sa légende — même traitement typographique que les scores. */
+function Figure({ value, label }: { value: string; label: string }) {
+  return (
+    // Le chiffre d'abord : un libellé qui passe à la ligne décalerait
+    // sinon les deux nombres l'un par rapport à l'autre.
+    <div className="hairline rounded-2xl bg-surface px-4 py-3.5">
+      <dd className="font-display italic text-[1.7rem] leading-none text-accent tabular">
+        {value}
+      </dd>
+      <dt className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-muted">{label}</dt>
     </div>
   );
 }

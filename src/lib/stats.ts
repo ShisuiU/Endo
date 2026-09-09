@@ -8,6 +8,15 @@ export type CrisisStats = {
   intervals: number[]; // en jours, du plus ancien au plus récent
   averageInterval: number | null;
   lastInterval: number | null;
+  /** Bornes des intervalles observés — une moyenne seule ment quand l'écart
+   *  est large (6 et 29 jours donnent « 14 », qui n'est jamais arrivé). */
+  minInterval: number | null;
+  maxInterval: number | null;
+  /** Durée moyenne d'un épisode, arrondie. */
+  averageLength: number | null;
+  /** Faux quand les intervalles sont trop dispersés pour qu'une estimation
+   *  ait un sens. Aucune prédiction n'est alors affichée. */
+  regular: boolean;
   estimateLabel: string | null;
 };
 
@@ -52,6 +61,22 @@ export function computeCrisisStats(sortedDates: string[]): CrisisStats {
       ? Math.round(intervals.reduce((a, b) => a + b, 0) / intervals.length)
       : null;
   const lastInterval = intervals.length > 0 ? intervals[intervals.length - 1] : null;
+  const minInterval = intervals.length > 0 ? Math.min(...intervals) : null;
+  const maxInterval = intervals.length > 0 ? Math.max(...intervals) : null;
+  const averageLength =
+    episodes.length > 0
+      ? Math.round(episodes.reduce((a, e) => a + e.length, 0) / episodes.length)
+      : null;
+
+  // Un seul intervalle ne dit rien de la régularité ; au-delà, on compare
+  // l'étendue à la moyenne. Étalé sur plus que sa propre moyenne, le rythme
+  // n'en est pas un — mieux vaut le dire que produire une fausse échéance.
+  const regular =
+    intervals.length >= 2 &&
+    averageInterval !== null &&
+    maxInterval !== null &&
+    minInterval !== null &&
+    maxInterval - minInterval <= averageInterval;
 
   let estimateLabel: string | null = null;
   if (averageInterval !== null && starts.length > 0) {
@@ -67,9 +92,11 @@ export function computeCrisisStats(sortedDates: string[]): CrisisStats {
     estimateLabel =
       daysSince === 0
         ? "Crise en cours"
-        : remaining > 0
-          ? `Dans ~${remaining} jour${remaining > 1 ? "s" : ""}, à ce rythme`
-          : "Déjà dépassé l'intervalle habituel";
+        : !regular && intervals.length >= 2
+          ? "Trop irrégulier pour une estimation"
+          : remaining > 0
+            ? `Dans ~${remaining} jour${remaining > 1 ? "s" : ""}, à ce rythme`
+            : "Déjà dépassé l'intervalle habituel";
   }
 
   return {
@@ -78,6 +105,10 @@ export function computeCrisisStats(sortedDates: string[]): CrisisStats {
     intervals,
     averageInterval,
     lastInterval,
+    minInterval,
+    maxInterval,
+    averageLength,
+    regular,
     estimateLabel,
   };
 }

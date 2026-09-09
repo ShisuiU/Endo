@@ -457,20 +457,47 @@ posée sur un écran d'accueil :
   installée : le changer ferait apparaître un second raccourci au lieu de
   mettre à jour le premier. Ne pas « corriger » cette incohérence apparente.
 
-## Statistiques — crises groupées en épisodes
+## Statistiques — ce que les repères ont le droit de dire
+
+### Crises groupées en épisodes
 
 Une crise d'endométriose dure rarement une seule journée. `stats.ts`
 comptait chaque **jour** de crise comme une crise, si bien que trois jours
 consécutifs produisaient deux intervalles d'un jour qui écrasaient la
 moyenne : sur deux mois de données réalistes, l'app annonçait
 « 6 jours entre deux crises » au lieu de 18. `groupEpisodes()` regroupe
-maintenant les jours consécutifs, et les intervalles se mesurent **d'un début
-d'épisode au suivant**. L'écran affiche aussi le total de jours
-(« 3 crises enregistrées (7 jours au total) ») et dit « Crise en cours »
-plutôt qu'une estimation quand l'épisode n'est pas fini.
+les jours consécutifs, et les intervalles se mesurent **d'un début
+d'épisode au suivant**.
 
-Ce défaut n'était pas visible avec une base vide ou deux entrées de test :
-il est apparu en peuplant un compte avec deux mois de journées plausibles.
+### La moyenne ne suffit pas — et parfois elle ment
+
+Des intervalles de 6 et 29 jours donnent une moyenne de 18, un intervalle
+qui **n'est jamais arrivé**. L'écran affiche donc l'étendue réelle sous la
+moyenne (« dans les faits, elles se sont espacées de 6 à 29 jours »), et
+`stats.regular` coupe l'estimation quand l'étendue dépasse la moyenne :
+« Trop irrégulier pour une estimation » plutôt qu'une fausse échéance. Sur
+un carnet de santé, une prédiction confiante tirée de trois points est pire
+que pas de prédiction du tout — ne pas « améliorer » ça en réactivant
+l'estimation dans tous les cas.
+
+Deux chiffres complètent la section, tirés de données déjà collectées mais
+jusque-là muettes : la **durée moyenne d'un épisode** et le **nombre de jours
+avec médicament** sur la fenêtre de 21 jours. Dans les cartes, le chiffre est
+au-dessus du libellé : un libellé qui passe à la ligne décalerait sinon les
+deux nombres l'un par rapport à l'autre.
+
+### « À rattraper » sur l'accueil
+
+`src/components/daily/missed-days.tsx`. On oublie de noter — surtout les
+jours de crise, justement. Il fallait ouvrir le calendrier, retrouver le jour
+sur l'anneau et le viser : trois gestes pour rattraper la veille. Les
+journées vides des sept derniers jours sont maintenant posées sur l'accueil,
+en pastilles de 56 px.
+
+**Le bloc est silencieux quand il n'y a rien à rattraper** — une semaine
+complète n'affiche rien. C'est une aide, pas un reproche : pas de compteur
+de série, pas de « tu as raté 3 jours ». Aujourd'hui n'y figure jamais, il a
+déjà son appel en haut de l'écran.
 
 ## `scripts/seed-demo.mjs` — peupler un compte
 
@@ -701,6 +728,11 @@ ressembler à un site généré par IA.**
   d'installation. 21 assertions Playwright.
 - **Suppression d'une journée** depuis son écran, et **export CSV** — les
   deux dernières tâches en attente de la liste.
+
+- **Repères plus honnêtes** : étendue des intervalles sous la moyenne, pas
+  d'estimation quand c'est trop irrégulier, durée moyenne d'un épisode et
+  jours avec médicament. **« À rattraper »** sur l'accueil pour les journées
+  vides de la semaine. 9 assertions Playwright.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

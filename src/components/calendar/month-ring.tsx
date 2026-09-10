@@ -91,7 +91,11 @@ export function MonthRing() {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center px-6 pb-6 lg:flex-row lg:items-center lg:gap-14">
+    // La figure déborde de la colonne de lecture, symétriquement : c'est une
+    // composition centrée, elle reste donc sur l'axe de l'en-tête. Le cadre
+    // de l'app, lui, ne bouge pas d'une route à l'autre — voir le ⚠️ de
+    // `ReadingColumn`.
+    <div className="flex-1 flex flex-col justify-center px-6 pb-6 lg:-mx-[11rem] lg:flex-row lg:items-center lg:gap-14">
       {/* Le mois est écrit au centre de l'anneau : l'en-tête ne porte donc
           que la navigation, pour ne pas le répéter deux fois à l'écran. */}
       <h1 className="sr-only">

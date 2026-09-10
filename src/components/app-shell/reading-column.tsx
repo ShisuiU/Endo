@@ -1,32 +1,23 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 /**
- * Les écrans qui ont le droit de dépasser la colonne de lecture quand
- * l'écran est large.
+ * La colonne de lecture, partagée par l'en-tête et le contenu.
  *
- * Le carnet (accueil, une journée, réglages) est du texte : il garde la
- * mesure d'une colonne de magazine, l'élargir le rendrait illisible. Le
- * calendrier et les repères, eux, sont des **figures** — un anneau et des
- * courbes — et une figure a besoin de place.
- */
-const WIDE = ["/calendrier", "/statistiques"];
-
-/**
- * La colonne partagée par l'en-tête et le contenu.
+ * L'app est dessinée pour 390 px de large ; sans borne, une fenêtre de
+ * 1440 px étirait le texte sur toute la largeur (mesure de lecture
+ * illisible) et donnait un bouton principal de 1400 px. 34 rem, c'est la
+ * largeur d'une colonne de magazine — l'app reste un carnet, elle ne devient
+ * pas un tableau de bord parce que l'écran est grand.
  *
- * Même composant des deux côtés, et donc **même axe** : le logotype, la
- * navigation et le bord gauche du texte sont toujours alignés. C'est la
- * raison d'être de ce fichier — si la largeur était décidée écran par
- * écran, l'en-tête resterait à 34 rem pendant que les repères s'étaleraient
- * à 58, et le titre de section démarrerait 17 rem à gauche du logotype.
- *
- * La largeur suit la route, pas l'appui : le changement de largeur tombe
- * pile au moment où le contenu est remplacé par la coquille de chargement,
- * donc il ne se voit pas.
+ * ⚠️ **Cette largeur est la même sur toutes les routes, et doit le rester.**
+ * Une version l'a fait varier — 58 rem sur le calendrier et les repères, qui
+ * sont des figures — en espérant garder le logotype aligné sur le bord
+ * gauche de leur contenu. Mesuré ensuite : à 1440 px, la **navigation se
+ * déplaçait de 192 px** d'un onglet à l'autre. C'est l'élément qu'on vise à
+ * la souris ; le voir sauter entre deux clics coûte infiniment plus cher que
+ * le petit décalage d'alignement que ça réglait. Les figures dépassent
+ * maintenant toutes seules (voir `MonthRing`), le cadre ne bouge plus.
  */
 export function ReadingColumn({
   className,
@@ -35,12 +26,5 @@ export function ReadingColumn({
   className?: string;
   children: ReactNode;
 }) {
-  const pathname = usePathname();
-  const wide = WIDE.some((route) => pathname?.startsWith(route));
-
-  return (
-    <div className={cn("mx-auto w-full max-w-[34rem]", wide && "lg:max-w-[58rem]", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn("mx-auto w-full max-w-[34rem]", className)}>{children}</div>;
 }

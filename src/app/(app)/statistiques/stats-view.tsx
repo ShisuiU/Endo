@@ -50,19 +50,20 @@ export function StatsView() {
             Continue à renseigner tes journées.
           </p>
         ) : (
-          /* Au large, le nombre passe à gauche du texte plutôt qu'au-dessus —
-             la lettrine d'un article. La mesure du texte, elle, ne bouge pas :
-             c'est la place gagnée qui s'ouvre, pas la ligne qui s'étire. */
-          <div className="lg:flex lg:items-start lg:gap-14">
-            <p className="font-display leading-[0.85] tracking-[-0.04em] lg:shrink-0">
-              <span className="text-[5.5rem] text-accent tabular lg:text-[7.5rem]">
+          /* Le texte garde la mesure de lecture à toutes les largeurs : cette
+             section est de la prose, elle s'aligne sur le logotype. Seules
+             les courbes, plus bas, sont une figure et ont le droit de
+             dépasser. */
+          <div>
+            <p className="font-display leading-[0.85] tracking-[-0.04em]">
+              <span className="text-[5.5rem] text-accent tabular">
                 {stats.averageInterval}
               </span>
               <span className="font-display italic text-[1.5rem] text-foreground ml-3">jours</span>
             </p>
 
-            <div className="lg:pt-6">
-              <p className="text-[0.9rem] text-muted mt-4 leading-relaxed max-w-[34ch] lg:mt-0 lg:max-w-[42ch]">
+            <div>
+              <p className="text-[0.9rem] text-muted mt-4 leading-relaxed max-w-[34ch]">
                 C&apos;est ta moyenne sur {stats.count} crises enregistrées.
                 {/* La moyenne seule ment quand l'écart est large : 6 et 29 jours
                     donnent « 14 », un intervalle qui n'est jamais arrivé. */}
@@ -88,7 +89,7 @@ export function StatsView() {
                   composés comme les dates et les scores : en Bodoni, dans la
                   phrase. */}
               {stats.averageLength !== null && (
-                <p className="mt-9 text-[0.95rem] leading-[2.4] text-muted lg:mt-7">
+                <p className="mt-9 text-[0.95rem] leading-[2.4] text-muted">
                   Une crise dure <Nombre>{stats.averageLength}</Nombre> jour
                   {stats.averageLength > 1 ? "s" : ""} en moyenne.
                   <br />
@@ -107,7 +108,7 @@ export function StatsView() {
             large : à 21 points, elles se comparent bien mieux côte à côte —
             on voit d'un coup si la douleur monte pendant que le sommeil
             descend, ce que l'empilement obligeait à faire de mémoire. */}
-        <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:gap-x-10">
+        <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:gap-x-7">
           <TrendLine label="Douleur" values={painValues} />
           <TrendLine label="Sommeil" values={sleepValues} tone="sage" />
           <TrendLine label="Humeur" values={moodValues} tone="sage" />

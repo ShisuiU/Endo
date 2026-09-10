@@ -696,11 +696,13 @@ pour le pouce flottait en bas d'un écran où la souris ne va jamais.
 Trois décisions, à `md` (768 px) :
 
 - **Une colonne de lecture de 34 rem** (`ReadingColumn`, dans
-  `src/components/app-shell/`), partagée par l'en-tête et le contenu. C'est
-  la largeur d'une colonne de magazine : l'app reste un carnet, elle ne
-  devient pas un tableau de bord parce que l'écran est grand. L'en-tête, lui,
-  tient toute la largeur — son filet doit filer d'un bord à l'autre — mais
-  son contenu s'aligne sur la colonne.
+  `src/components/app-shell/`), partagée par l'en-tête et le contenu, et
+  **identique sur toutes les routes** (voir le ⚠️ plus bas : l'avoir fait
+  varier déplaçait la navigation d'un onglet à l'autre). C'est la largeur
+  d'une colonne de magazine : l'app reste un carnet, elle ne devient pas un
+  tableau de bord parce que l'écran est grand. L'en-tête, lui, tient toute la
+  largeur — son filet doit filer d'un bord à l'autre — mais son contenu
+  s'aligne sur la colonne.
   ⚠️ **La marge latérale est *dans* la colonne, pas sur l'en-tête.** Posée
   sur `<header>` elle rentrait dans le calcul du centrage, et le logotype
   finissait 24 px à gauche du texte de la page sur un grand écran — invisible
@@ -736,18 +738,33 @@ Une assertion vérifie l'absence de débordement sur les quatre écrans à
 
 Une colonne unique partout, c'était l'app « la même partout ». Mais deux
 écrans ne sont pas du texte : le calendrier et les repères sont des
-**figures**, un anneau et des courbes, et une figure a besoin de place. À
-partir de `lg`, `ReadingColumn` les laisse aller jusqu'à **58 rem** ; le
-carnet (accueil, une journée, réglages) garde sa mesure de 34 rem partout.
+**figures**, un anneau et des courbes, et une figure a besoin de place.
 
-C'est la raison d'être de `ReadingColumn` : le **même** composant décide de
-la largeur de l'en-tête et de celle du contenu, donc le logotype, la
-navigation et le bord gauche du texte restent sur un seul axe. Décidée écran
-par écran, la largeur aurait laissé l'en-tête à 34 rem pendant que les
-repères s'étalaient à 58 — un titre de section démarrant 17 rem à gauche du
-logotype. La largeur suit la route, jamais l'appui : le changement tombe
-pile au moment où le contenu est remplacé par la coquille de chargement,
-donc il ne se voit pas.
+#### ⚠️ Le cadre ne bouge pas — la figure déborde toute seule
+
+Première tentative, **fausse piste corrigée depuis** : faire varier la
+largeur de `ReadingColumn` selon la route (58 rem sur ces deux écrans,
+34 rem ailleurs), en espérant garder le logotype aligné sur le bord gauche
+de leur contenu. Comme `ReadingColumn` sert aussi l'en-tête, celui-ci
+changeait de largeur avec le contenu — et **la navigation se déplaçait de
+192 px d'un onglet à l'autre à 1440 px** (mesuré : x = 549 sur Accueil,
+Réglages et Jour ; x = 357 sur Calendrier et Repères). Signalé par
+l'utilisatrice au tour suivant : « la navbar n'est pas à la même hauteur
+suivant les pages ». La hauteur, elle, était identique partout — c'est le
+saut latéral qui se voit, sur l'élément qu'on vise à la souris.
+
+Règle qui en sort : **la colonne fait 34 rem sur toutes les routes, et le
+cadre de l'app ne bouge jamais d'un écran à l'autre.** Ce sont les
+**figures** qui débordent, chacune chez elle, par une marge négative
+symétrique (`lg:-mx-[11rem]` sur `MonthRing`) : la composition reste centrée
+sur le même axe que l'en-tête, et rien dans le cadre ne se déplace. Une
+assertion compare la position de la navigation sur les cinq routes à chaque
+largeur.
+
+Corollaire : **la prose ne déborde pas.** Sur les repères, le texte garde la
+mesure de lecture et s'aligne sur le logotype ; seules les trois courbes se
+mettent de front. La version « lettrine » (le grand nombre à gauche du
+texte) supposait une colonne large : elle est retirée.
 
 Ce que la place gagnée sert à faire — jamais un simple agrandissement :
 
@@ -769,22 +786,21 @@ Ce que la place gagnée sert à faire — jamais un simple agrandissement :
     Écartées de 600 px aux deux bouts de l'anneau, elles ne se lisaient plus
     ensemble. Sur téléphone elles restent aux bords, là où le pouce les
     trouve.
-- **Repères** : les **trois courbes passent de front**. À 21 points elles se
-  comparent bien mieux côte à côte — on voit d'un coup si la douleur monte
-  pendant que le sommeil descend, ce que l'empilement obligeait à faire de
-  mémoire. Et l'intervalle moyen passe **à gauche** du texte plutôt
-  qu'au-dessus, comme la lettrine d'un article ; la mesure du texte, elle,
-  ne bouge quasiment pas (34 → 42 ch).
+- **Repères** : les **trois courbes passent de front**, dans la colonne de
+  lecture (≈ 155 px chacune). À 21 points elles se comparent bien mieux côte
+  à côte — on voit d'un coup si la douleur monte pendant que le sommeil
+  descend, ce que l'empilement obligeait à faire de mémoire.
 
-Le blanc à droite de la première section est voulu : sur ces écrans, c'est
-le blanc qui fait respirer. Ne pas le remplir d'une troisième colonne de
-chiffres — on retomberait sur le tableau de bord que le projet s'interdit.
+Le blanc à droite est voulu : sur ces écrans, c'est le blanc qui fait
+respirer. Ne pas le remplir d'une colonne de chiffres — on retomberait sur
+le tableau de bord que le projet s'interdit.
 
-**70 assertions Playwright** aux quatre largeurs : pas de débordement,
-largeur de colonne attendue **route par route**, en-tête et contenu sur le
-même axe, une seule navigation visible à la fois, la bonne selon la largeur,
-le parcours à la bonne taille et centré, la légende à côté de l'anneau et
-les trois courbes sur une rangée à partir de 1024 px (empilées en dessous).
+**74 assertions Playwright** aux quatre largeurs : pas de débordement,
+colonne à 34 rem sur toutes les routes, en-tête et contenu sur le même axe,
+**navigation immobile d'une route à l'autre** (les cinq écrans), une seule
+navigation visible à la fois, la bonne selon la largeur, le parcours à la
+bonne taille et centré, la légende à côté de l'anneau et les trois courbes
+sur une rangée à partir de 1024 px (empilées en dessous).
 
 ## PWA
 
@@ -982,9 +998,10 @@ ressembler à un site généré par IA.**
   horizontal de 7 px corrigé au passage.
 - **Calendrier et repères qui respirent au large** (`lg`) : anneau élargi
   avec chaque jour numéroté et le récit du mois à côté, trois courbes de
-  front, intervalle moyen en lettrine. Décalage de 24 px entre le logotype
-  et le texte des pages corrigé au passage. 70 assertions Playwright à
-  quatre largeurs.
+  front. Décalage de 24 px entre le logotype et le texte des pages corrigé
+  au passage. **Navigation qui sautait de 192 px d'un onglet à l'autre**
+  (signalée par l'utilisatrice) corrigée : le cadre ne bouge plus, seules
+  les figures débordent. 74 assertions Playwright à quatre largeurs.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

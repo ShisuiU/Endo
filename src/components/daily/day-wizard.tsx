@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ScoreSlider } from "@/components/ui/score-slider";
 import { Toggle } from "@/components/ui/toggle";
@@ -21,9 +21,22 @@ export type WizardStep = Common &
         onLabel: string;
         onChange: (value: boolean) => void;
         /** Champ libre qui n'apparaît que si la réponse est « oui ». */
-        detail?: { value: string; placeholder: string; onChange: (value: string) => void };
+        detail?: {
+          value: string;
+          placeholder: string;
+          onChange: (value: string) => void;
+          /** Le dernier médicament écrit, à reprendre d'un mot. */
+          habit?: string | null;
+        };
       }
-    | { kind: "tags"; values: string[]; placeholder: string; onChange: (values: string[]) => void }
+    | {
+        kind: "tags";
+        values: string[];
+        placeholder: string;
+        onChange: (values: string[]) => void;
+        /** Ce qui revient souvent, à ajouter d'un mot. */
+        habits?: string[];
+      }
     | { kind: "text"; value: string; placeholder: string; onChange: (value: string) => void }
   );
 
@@ -196,6 +209,40 @@ export function DayWizard({
   );
 }
 
+/**
+ * Ce qui revient souvent, proposé **en toutes lettres**.
+ *
+ * Le catalogue 21st donne deux réponses à ce besoin, et ce sont exactement
+ * les deux à éviter ici : la liste déroulante d'autocomplétion sous le
+ * champ, et la rangée de pastilles — ce second motif étant, dans huit
+ * résultats sur dix, la rangée de suggestions d'un chat d'IA. Autant signer
+ * l'app.
+ *
+ * L'app a déjà sa manière de rendre un mot tapable : le résumé du jour, où
+ * chaque fragment de phrase rouvre sa question. On la reprend. Ce sont des
+ * cibles *en ligne dans un texte* (exemptées de la taille minimale par
+ * WCAG 2.5.8) — mais on ne s'en contente pas : 1 rem sur un interligne de
+ * 2.8 donne des mots de **44,8 px de haut**, mesurés. À 0.95 rem et 2.6,
+ * ils n'en faisaient que 40, et c'est bien la règle des 44 px qui a motivé
+ * toute la refonte de l'app.
+ */
+function Habitudes({ children }: { children: ReactNode }) {
+  return <p className="mt-5 text-[1rem] leading-[2.8] text-muted">{children}</p>;
+}
+
+/** Un mot d'habitude, tapable — même traitement que dans le résumé du jour. */
+function Mot({ children, onPick }: { children: ReactNode; onPick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className="text-left text-foreground underline decoration-[color:var(--hairline)] underline-offset-[6px] transition-colors hover:decoration-accent"
+    >
+      {children}
+    </button>
+  );
+}
+
 function StepField({ step }: { step: WizardStep }) {
   if (step.kind === "score")
     return (
@@ -213,23 +260,51 @@ function StepField({ step }: { step: WizardStep }) {
           onLabel={step.onLabel}
         />
         {step.detail && step.value && (
-          <label className="mt-4 block">
-            <span className="sr-only">{step.detail.placeholder}</span>
-            <input
-              value={step.detail.value}
-              onChange={(event) => step.detail?.onChange(event.target.value)}
-              placeholder={step.detail.placeholder}
-              className="min-h-[52px] w-full rounded-2xl bg-surface px-4 text-[0.95rem] outline-none hairline focus:border-accent/60"
-            />
-          </label>
+          <>
+            <label className="mt-4 block">
+              <span className="sr-only">{step.detail.placeholder}</span>
+              <input
+                value={step.detail.value}
+                onChange={(event) => step.detail?.onChange(event.target.value)}
+                placeholder={step.detail.placeholder}
+                className="min-h-[52px] w-full rounded-2xl bg-surface px-4 text-[0.95rem] outline-none hairline focus:border-accent/60"
+              />
+            </label>
+            {/* Le champ vide seulement : une fois qu'on écrit, une
+                proposition qui reste affichée devient du bruit. */}
+            {step.detail.habit && step.detail.value.trim() === "" && (
+              <Habitudes>
+                La dernière fois :{" "}
+                <Mot onPick={() => step.detail?.onChange(step.detail.habit ?? "")}>
+                  {step.detail.habit}
+                </Mot>
+                .
+              </Habitudes>
+            )}
+          </>
         )}
       </div>
     );
 
-  if (step.kind === "tags")
+  if (step.kind === "tags") {
+    const reste = (step.habits ?? []).filter((food) => !step.values.includes(food));
     return (
-      <TagInput values={step.values} onChange={step.onChange} placeholder={step.placeholder} />
+      <div>
+        <TagInput values={step.values} onChange={step.onChange} placeholder={step.placeholder} />
+        {reste.length > 0 && (
+          <Habitudes>
+            Souvent :{" "}
+            {reste.map((food, i) => (
+              <span key={food}>
+                <Mot onPick={() => step.onChange([...step.values, food])}>{food}</Mot>
+                {i === reste.length - 1 ? "." : ", "}
+              </span>
+            ))}
+          </Habitudes>
+        )}
+      </div>
     );
+  }
 
   return (
     <label>

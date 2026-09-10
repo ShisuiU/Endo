@@ -142,3 +142,65 @@ export async function upsertEntry(input: DailyEntryInput): Promise<DailyEntry> {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Ce qui revient souvent, pour ne pas le retaper chaque soir.
+ *
+ * Le carnet se remplit en douleur, au lit, au pouce : « riz », « poulet »,
+ * « Spasfon, 2 comprimés » sont retapés à l'identique des dizaines de fois.
+ * Une seule requête sur les 90 derniers jours en tire deux choses — les
+ * aliments les plus notés, et le dernier médicament écrit.
+ *
+ * Volontairement limité aux 90 derniers jours : ce sont des *habitudes*
+ * actuelles, pas un historique. Un aliment abandonné depuis six mois n'a
+ * rien à faire sous le champ. Six mots au plus : au-delà, la phrase passe à
+ * deux lignes et chaque mot se noie dans la liste.
+ */
+export type Habits = { foods: string[]; medication: string | null };
+
+export async function fetchHabits(days = 90, limit = 6): Promise<Habits> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { foods: [], medication: null };
+
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const iso = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, "0")}-${String(
+    since.getDate()
+  ).padStart(2, "0")}`;
+
+  const { data, error } = await supabase
+    .from("daily_entries")
+    .select("entry_date, foods, medication_notes")
+    .eq("user_id", user.id)
+    .gte("entry_date", iso)
+    .order("entry_date", { ascending: false });
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+  let medication: string | null = null;
+  for (const row of data ?? []) {
+    for (const food of row.foods ?? []) {
+      const clean = food.trim();
+      if (clean) counts.set(clean, (counts.get(clean) ?? 0) + 1);
+    }
+    // Les lignes arrivent de la plus récente à la plus ancienne : le
+    // premier médicament écrit qu'on croise est le dernier pris.
+    if (medication === null && row.medication_notes?.trim()) {
+      medication = row.medication_notes.trim();
+    }
+  }
+
+  const foods = [...counts.entries()]
+    // À égalité de fréquence, l'ordre alphabétique : sans ce départage, la
+    // liste changeait d'ordre d'une ouverture à l'autre et on ne pouvait
+    // plus viser de mémoire.
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"))
+    .slice(0, limit)
+    .map(([food]) => food);
+
+  return { foods, medication };
+}

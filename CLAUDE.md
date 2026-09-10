@@ -480,6 +480,48 @@ L'animation entre questions ne touche qu'`opacity` et `transform`, jamais la
 géométrie (leçon de la barre de navigation), et disparaît sous
 `prefers-reduced-motion`.
 
+### Ce qui revient souvent — proposé en toutes lettres
+
+Le carnet se remplit en douleur, au lit, au pouce, et « riz », « poulet »,
+« Spasfon, 2 comprimés » sont retapés à l'identique des dizaines de fois.
+`fetchHabits()` (`entries-client.ts`) tire d'**une seule requête** sur les
+90 derniers jours les six aliments les plus notés et le dernier médicament
+écrit. Volontairement borné à 90 jours : ce sont des *habitudes actuelles*,
+pas un historique — un aliment abandonné depuis six mois n'a rien à faire
+sous le champ. À fréquence égale, départage alphabétique : sans lui la liste
+changeait d'ordre d'une ouverture à l'autre et on ne pouvait plus viser de
+mémoire.
+
+⚠️ **La forme n'est pas négociable, et le catalogue 21st explique pourquoi.**
+Interrogé sur « tag input with suggestions », il donne deux réponses, et ce
+sont exactement les deux à éviter : la **liste déroulante d'autocomplétion**
+sous le champ, et la **rangée de pastilles** — ce second motif étant, dans
+huit résultats sur dix, la rangée de suggestions d'un chat d'IA. Autant
+signer l'app.
+
+Ce qui est en place reprend l'idiome que le résumé du jour a déjà installé :
+**des mots tapables dans une phrase**. « Souvent : riz, poulet, pain… » sous
+le champ des repas, « La dernière fois : Spasfon, 2 comprimés. » sous celui
+du médicament. Aucune boîte, aucune pastille, aucun panneau flottant.
+
+- Les mots font **44,8 px de haut** (1 rem sur un interligne de 2.8),
+  mesurés. À 0.95 rem et 2.6 ils n'en faisaient que 40 — WCAG 2.5.8 exempte
+  les cibles en ligne dans un texte, mais la règle des 44 px est ce qui a
+  motivé toute la refonte de l'app, on ne s'en dispense pas.
+- Un aliment déjà choisi **quitte la phrase**.
+- La proposition de médicament n'apparaît **que si le champ est vide** :
+  une fois qu'on écrit, une proposition qui reste affichée devient du bruit.
+  Elle revient si on vide le champ.
+- Les habitudes sont chargées **à part du brouillon** et leur échec est
+  avalé : c'est un confort, il ne doit jamais retarder la saisie ni la faire
+  échouer. Hors-ligne, le champ reste simplement nu.
+
+16 assertions Playwright : ordre par fréquence puis alphabétique, six mots
+au plus, hauteur de cible mesurée, absence de fond et de bordure sur les
+mots (donc pas de pastille), ajout au champ, retrait de la phrase, apparition
+et disparition de la proposition de médicament, et carnet vierge sans
+proposition.
+
 **Renommage `/aujourdhui` → `/accueil`** : l'onglet et la route s'appellent
 désormais « Accueil ». Deux précautions pour ne pas casser une app déjà
 posée sur un écran d'accueil :
@@ -892,6 +934,9 @@ ressembler à un site généré par IA.**
 - **Repères plus honnêtes** : étendue des intervalles sous la moyenne, pas
   d'estimation quand c'est trop irrégulier, durée moyenne d'un épisode et
   jours avec médicament.
+- **Ce qui revient souvent, proposé en toutes lettres** sous les champs
+  repas et médicament — des mots tapables dans une phrase, pas une liste
+  déroulante ni une rangée de pastilles. 16 assertions Playwright.
 - **Résumé du jour en prose**, chaque fragment tapable (troisième version,
   voir § La journée entière). Bloc « À rattraper » retiré.
   30 assertions Playwright.

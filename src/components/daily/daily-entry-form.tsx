@@ -5,7 +5,14 @@ import { CardLabel } from "@/components/ui/card";
 import { DayCall } from "@/components/daily/day-call";
 import { DayWizard, type WizardStep } from "@/components/daily/day-wizard";
 import { DaySummary, type DaySummaryData } from "@/components/daily/day-summary";
-import { currentUserId, deleteEntry, fetchEntry, upsertEntry } from "@/lib/entries-client";
+import {
+  currentUserId,
+  deleteEntry,
+  fetchEntry,
+  fetchHabits,
+  upsertEntry,
+  type Habits,
+} from "@/lib/entries-client";
 import {
   claimDate,
   clearPending,
@@ -106,6 +113,10 @@ export function DailyEntryForm({
   const [retry, setRetry] = useState(0);
   /** Index de la question ouverte dans le parcours, `null` s'il est fermé. */
   const [wizardAt, setWizardAt] = useState<number | null>(null);
+  /** Ce qui revient souvent dans ce carnet : aliments les plus notés,
+   *  dernier médicament écrit. Chargé à part du brouillon — c'est un
+   *  confort, il ne doit jamais retarder la saisie ni la faire échouer. */
+  const [habits, setHabits] = useState<Habits>({ foods: [], medication: null });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const hydrated = useRef(false);
@@ -116,6 +127,18 @@ export function DailyEntryForm({
   const saved = useRef("");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { day, month, weekday } = dateParts(date);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchHabits()
+      .then((found) => !cancelled && setHabits(found))
+      .catch(() => {
+        // Hors-ligne, ou rien à proposer : le champ reste simplement nu.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +299,7 @@ export function DailyEntryForm({
         value: draft.medication_notes,
         placeholder: "Lequel, à quelle heure…",
         onChange: (v) => update("medication_notes", v),
+        habit: habits.medication,
       },
     },
     {
@@ -286,6 +310,7 @@ export function DailyEntryForm({
       values: draft.foods,
       placeholder: "Ajouter un aliment…",
       onChange: (v) => update("foods", v),
+      habits: habits.foods,
     },
     {
       id: "notes",

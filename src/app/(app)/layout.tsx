@@ -5,21 +5,18 @@ import Link from "next/link";
 import { SettingsIcon } from "@/components/icons";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { HeaderNav } from "@/components/app-shell/header-nav";
+import { ReadingColumn } from "@/components/app-shell/reading-column";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { PendingSync } from "@/components/daily/pending-sync";
-import { cn } from "@/lib/cn";
 
 /**
- * La colonne de lecture, partagée par l'en-tête et le contenu.
- *
  * L'app est dessinée pour 390 px de large ; sans borne, une fenêtre de
  * 1440 px étirait le texte sur toute la largeur (mesure de lecture
- * illisible) et donnait un bouton principal de 1400 px. 34 rem, c'est la
- * largeur d'une colonne de magazine — l'app reste un carnet, elle ne devient
- * pas un tableau de bord parce que l'écran est grand.
+ * illisible) et donnait un bouton principal de 1400 px.
+ *
+ * La borne vit maintenant dans `ReadingColumn`, qui la desserre sur les deux
+ * écrans faits de figures (calendrier, repères) et la garde partout ailleurs.
  */
-const COLUMN = "mx-auto w-full max-w-[34rem]";
-
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
@@ -34,12 +31,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         // Fond opaque, pas de `backdrop-blur` : à 95 % d'opacité le flou ne se
         // voyait pas, mais Safari repeignait toute la bande à chaque image des
         // animations qui passent dessous — c'est ce qui hachait la navigation.
-        className="hairline-b px-6 pb-4 bg-background sticky top-0 z-20"
+        className="hairline-b pb-4 bg-background sticky top-0 z-20"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
       >
         {/* L'en-tête tient toute la largeur (le filet doit filer d'un bord à
-            l'autre), mais son contenu s'aligne sur la colonne de lecture. */}
-        <div className={cn(COLUMN, "flex items-center justify-between gap-6")}>
+            l'autre), mais son contenu s'aligne sur la colonne de lecture.
+            La marge latérale est *dans* la colonne, pas sur l'en-tête : posée
+            sur l'en-tête, elle rentrait dans le calcul du centrage et le
+            logotype finissait 24 px à gauche du texte de la page sur un grand
+            écran. Un décalage qu'on ne voyait pas à 390 px. */}
+        <ReadingColumn className="flex items-center justify-between gap-6 px-6">
           <Wordmark />
           <HeaderNav />
           {/* La déconnexion a rejoint les réglages : elle n'a rien à faire en
@@ -51,11 +52,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             <SettingsIcon className="w-5 h-5" />
           </Link>
-        </div>
+        </ReadingColumn>
       </header>
 
       <main className="flex-1 flex flex-col">
-        <div className={cn(COLUMN, "flex flex-1 flex-col")}>{children}</div>
+        <ReadingColumn className="flex flex-1 flex-col">{children}</ReadingColumn>
       </main>
 
       <PendingSync />

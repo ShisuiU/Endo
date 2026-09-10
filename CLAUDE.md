@@ -60,7 +60,8 @@ L'app est sombre par nature : pas de bascule clair/sombre, `color-scheme: dark`.
 - Filets fins (`.hairline`) plutôt que des cards à ombre portée. Sur fond
   sombre, c'est l'écart de valeur qui sépare les plans.
 - Composants faits main : `Toggle`, `TagInput`, `Field` (libellé montant),
-  `MonthRing`, `TrendLine`. Aucune librairie de composants ni de charts.
+  `MonthRing`, `TrendLine`, `Nombre` (un nombre composé en Bodoni dans le
+  fil du texte — le remplaçant des vignettes de chiffres). Aucune librairie de composants ni de charts.
   **Il n'y a volontairement pas de composant `Card`** — il a existé, il a été
   supprimé avec les blocs qu'il servait. `src/components/ui/card.tsx` ne
   contient plus que l'intertitre `CardLabel`, et dit pourquoi.
@@ -190,16 +191,18 @@ toute première direction, n'existe plus que dans l'historique Git.
           (app)/layout.tsx                                     — zone connectée (nav, garde d'auth)
     manifest.ts, layout.tsx, globals.css                       — shell + PWA
   src/components/
-    ui/            — Button, Card, ScoreSlider, Toggle, TagInput, Wordmark
+    ui/            — Button, CardLabel, ScoreSlider, Toggle, TagInput,
+                      Wordmark, Nombre (chiffre en Bodoni dans le texte)
     icons.tsx       — set d'icônes maison
     daily/          — DayWizard (la journée, une question par écran),
                       DaySummary (le résumé de l'accueil), DailyEntryForm
                       (état + sauvegarde, réutilisé par /accueil et /jour/[date])
-    calendar/       — grille mensuelle
+    calendar/       — le mois en anneau (MonthRing)
     stats/          — courbes de tendance dessinées à la main
     pwa/            — enregistrement du service worker, invite iOS "à l'écran d'accueil"
     app-shell/      — navigation : capsule basse (téléphone), barre d'en-tête
-                      (écran large), items et onglet actif partagés
+                      (écran large), items et onglet actif partagés, et
+                      ReadingColumn (la largeur de colonne, par route)
   src/lib/
     supabase/       — clients browser/server/proxy + types
     entries-client.ts, profile-client.ts, pending-entries.ts,
@@ -616,12 +619,17 @@ pour le pouce flottait en bas d'un écran où la souris ne va jamais.
 
 Trois décisions, à `md` (768 px) :
 
-- **Une colonne de lecture de 34 rem** (`COLUMN` dans `(app)/layout.tsx`),
-  partagée par l'en-tête et le contenu. C'est la largeur d'une colonne de
-  magazine : l'app reste un carnet, elle ne devient pas un tableau de bord
-  parce que l'écran est grand. L'en-tête, lui, tient toute la largeur — son
-  filet doit filer d'un bord à l'autre — mais son contenu s'aligne sur la
-  colonne.
+- **Une colonne de lecture de 34 rem** (`ReadingColumn`, dans
+  `src/components/app-shell/`), partagée par l'en-tête et le contenu. C'est
+  la largeur d'une colonne de magazine : l'app reste un carnet, elle ne
+  devient pas un tableau de bord parce que l'écran est grand. L'en-tête, lui,
+  tient toute la largeur — son filet doit filer d'un bord à l'autre — mais
+  son contenu s'aligne sur la colonne.
+  ⚠️ **La marge latérale est *dans* la colonne, pas sur l'en-tête.** Posée
+  sur `<header>` elle rentrait dans le calcul du centrage, et le logotype
+  finissait 24 px à gauche du texte de la page sur un grand écran — invisible
+  à 390 px, où les deux sont collés au bord. Une assertion compare
+  maintenant les deux axes à chaque largeur.
 - **La navigation passe dans l'en-tête** (`HeaderNav`), trois mots avec un
   filet corail sous celui où l'on est ; la capsule du bas devient
   `md:hidden`. Une pastille glissante dans un en-tête ferait décoration.
@@ -648,9 +656,59 @@ halo est désormais `inset-x-0`, avec un dégradé élargi pour compenser.
 Une assertion vérifie l'absence de débordement sur les quatre écrans à
 390, 768, 1024 et 1440 px.
 
-**48 assertions Playwright** aux quatre largeurs : pas de débordement,
-colonne bornée à 544 px, une seule navigation visible à la fois, la bonne
-selon la largeur, et le parcours à la bonne taille et centré.
+### Faire respirer le calendrier et les repères (`lg`, 1024 px)
+
+Une colonne unique partout, c'était l'app « la même partout ». Mais deux
+écrans ne sont pas du texte : le calendrier et les repères sont des
+**figures**, un anneau et des courbes, et une figure a besoin de place. À
+partir de `lg`, `ReadingColumn` les laisse aller jusqu'à **58 rem** ; le
+carnet (accueil, une journée, réglages) garde sa mesure de 34 rem partout.
+
+C'est la raison d'être de `ReadingColumn` : le **même** composant décide de
+la largeur de l'en-tête et de celle du contenu, donc le logotype, la
+navigation et le bord gauche du texte restent sur un seul axe. Décidée écran
+par écran, la largeur aurait laissé l'en-tête à 34 rem pendant que les
+repères s'étalaient à 58 — un titre de section démarrant 17 rem à gauche du
+logotype. La largeur suit la route, jamais l'appui : le changement tombe
+pile au moment où le contenu est remplacé par la coquille de chargement,
+donc il ne se voit pas.
+
+Ce que la place gagnée sert à faire — jamais un simple agrandissement :
+
+- **Calendrier** : l'anneau passe à gauche (616 px au lieu de 496), et tout
+  ce qui était empilé dessous vient à sa droite. Ce n'est pas qu'une
+  question de largeur : sur un portable la fenêtre est **basse**, et
+  l'empilement mobile touchait le bas de l'écran. Mêmes éléments reflowés —
+  aucun n'est monté deux fois, contrairement aux deux barres de navigation.
+  - **Chaque jour porte son numéro** (tous les cinq seulement sur téléphone,
+    où trente-et-un nombres se toucheraient), les repères de cinq restant
+    plus francs pour garder le rythme. ⚠️ La taille des numéros est reprise
+    en unités SVG (`lg:[font-size:7.5px]`) : 11 unités donnent 11 px sur un
+    anneau de 340 px, mais 20 px sur celui de 616 — les numéros criaient
+    plus fort que les traits qu'ils repèrent.
+  - **Le récit du mois** apparaît à côté — « 9 journées notées sur 30. 4
+    jours de crise. » — en prose, nombres en Bodoni, sans boîte. Il n'existe
+    qu'au large : c'est la place gagnée qui le paie.
+  - Les deux flèches de mois **se rapprochent** en une paire centrée.
+    Écartées de 600 px aux deux bouts de l'anneau, elles ne se lisaient plus
+    ensemble. Sur téléphone elles restent aux bords, là où le pouce les
+    trouve.
+- **Repères** : les **trois courbes passent de front**. À 21 points elles se
+  comparent bien mieux côte à côte — on voit d'un coup si la douleur monte
+  pendant que le sommeil descend, ce que l'empilement obligeait à faire de
+  mémoire. Et l'intervalle moyen passe **à gauche** du texte plutôt
+  qu'au-dessus, comme la lettrine d'un article ; la mesure du texte, elle,
+  ne bouge quasiment pas (34 → 42 ch).
+
+Le blanc à droite de la première section est voulu : sur ces écrans, c'est
+le blanc qui fait respirer. Ne pas le remplir d'une troisième colonne de
+chiffres — on retomberait sur le tableau de bord que le projet s'interdit.
+
+**70 assertions Playwright** aux quatre largeurs : pas de débordement,
+largeur de colonne attendue **route par route**, en-tête et contenu sur le
+même axe, une seule navigation visible à la fois, la bonne selon la largeur,
+le parcours à la bonne taille et centré, la légende à côté de l'anneau et
+les trois courbes sur une rangée à partir de 1024 px (empilées en dessous).
 
 ## PWA
 
@@ -840,8 +898,12 @@ ressembler à un site généré par IA.**
 
 - **Utilisable sur ordinateur** : colonne de lecture bornée, navigation en
   en-tête sur écran large, parcours en colonne de page. Débordement
-  horizontal de 7 px corrigé au passage. 48 assertions Playwright à quatre
-  largeurs.
+  horizontal de 7 px corrigé au passage.
+- **Calendrier et repères qui respirent au large** (`lg`) : anneau élargi
+  avec chaque jour numéroté et le récit du mois à côté, trois courbes de
+  front, intervalle moyen en lettrine. Décalage de 24 px entre le logotype
+  et le texte des pages corrigé au passage. 70 assertions Playwright à
+  quatre largeurs.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

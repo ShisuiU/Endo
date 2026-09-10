@@ -8,6 +8,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, CloseIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
+import { commonSuggestions, withoutFoods } from "@/lib/foods";
 
 type Common = { id: string; title: string; hint: string };
 
@@ -219,15 +220,31 @@ export function DayWizard({
  * l'app.
  *
  * L'app a déjà sa manière de rendre un mot tapable : le résumé du jour, où
- * chaque fragment de phrase rouvre sa question. On la reprend. Ce sont des
+ * chaque fragment de phrase rouvre sa question. On la reprend — y compris
+ * pour la liste d'amorce (`src/lib/foods.ts`), qui aurait été la tentation
+ * la plus forte de sortir un sélecteur en grille. Ce sont des
  * cibles *en ligne dans un texte* (exemptées de la taille minimale par
  * WCAG 2.5.8) — mais on ne s'en contente pas : 1 rem sur un interligne de
  * 2.8 donne des mots de **44,8 px de haut**, mesurés. À 0.95 rem et 2.6,
  * ils n'en faisaient que 40, et c'est bien la règle des 44 px qui a motivé
  * toute la refonte de l'app.
  */
-function Habitudes({ children }: { children: ReactNode }) {
-  return <p className="mt-5 text-[1rem] leading-[2.8] text-muted">{children}</p>;
+function Habitudes({ children, className }: { children: ReactNode; className?: string }) {
+  return <p className={cn("mt-5 text-[1rem] leading-[2.8] text-muted", className)}>{children}</p>;
+}
+
+/** Une énumération de mots tapables, ponctuée comme une phrase. */
+function Mots({ list, onPick }: { list: string[]; onPick: (food: string) => void }) {
+  return (
+    <>
+      {list.map((food, i) => (
+        <span key={food}>
+          <Mot onPick={() => onPick(food)}>{food}</Mot>
+          {i === list.length - 1 ? "." : ", "}
+        </span>
+      ))}
+    </>
+  );
 }
 
 /** Un mot d'habitude, tapable — même traitement que dans le résumé du jour. */
@@ -287,19 +304,27 @@ function StepField({ step }: { step: WizardStep }) {
     );
 
   if (step.kind === "tags") {
-    const reste = (step.habits ?? []).filter((food) => !step.values.includes(food));
+    const pris = step.values;
+    const ajouter = (food: string) => step.onChange([...pris, food]);
+    // Ce que la personne note souvent, puis ce que le carnet propose pour
+    // amorcer. La seconde liste recule à mesure que la première grandit.
+    const siens = withoutFoods(step.habits ?? [], pris);
+    const amorce = commonSuggestions(step.habits ?? [], pris);
+
     return (
       <div>
-        <TagInput values={step.values} onChange={step.onChange} placeholder={step.placeholder} />
-        {reste.length > 0 && (
+        <TagInput values={pris} onChange={step.onChange} placeholder={step.placeholder} />
+        {siens.length > 0 && (
           <Habitudes>
-            Souvent :{" "}
-            {reste.map((food, i) => (
-              <span key={food}>
-                <Mot onPick={() => step.onChange([...step.values, food])}>{food}</Mot>
-                {i === reste.length - 1 ? "." : ", "}
-              </span>
-            ))}
+            Souvent : <Mots list={siens} onPick={ajouter} />
+          </Habitudes>
+        )}
+        {amorce.length > 0 && (
+          // « Ou bien » suppose une première liste ; sans elle, c'est la
+          // seule chose proposée et elle s'annonce comme telle.
+          <Habitudes className={siens.length > 0 ? "mt-1" : undefined}>
+            {siens.length > 0 ? "Ou bien : " : "Par exemple : "}
+            <Mots list={amorce} onPick={ajouter} />
           </Habitudes>
         )}
       </div>

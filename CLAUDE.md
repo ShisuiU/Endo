@@ -206,7 +206,7 @@ toute première direction, n'existe plus que dans l'historique Git.
   src/lib/
     supabase/       — clients browser/server/proxy + types
     entries-client.ts, profile-client.ts, pending-entries.ts,
-    csv.ts, date.ts, stats.ts, cn.ts
+    csv.ts, date.ts, stats.ts, foods.ts, cn.ts
   supabase/migrations/0001_init.sql
   scripts/generate-icons.mjs   — génère public/icons + public/splash
   ```
@@ -516,11 +516,45 @@ du médicament. Aucune boîte, aucune pastille, aucun panneau flottant.
   avalé : c'est un confort, il ne doit jamais retarder la saisie ni la faire
   échouer. Hors-ligne, le champ reste simplement nu.
 
-16 assertions Playwright : ordre par fréquence puis alphabétique, six mots
-au plus, hauteur de cible mesurée, absence de fond et de bordure sur les
-mots (donc pas de pastille), ajout au champ, retrait de la phrase, apparition
-et disparition de la proposition de médicament, et carnet vierge sans
-proposition.
+#### Une liste d'amorce, pour le premier soir
+
+Sur un compte neuf, les habitudes sont vides et le champ des repas était nu
+le soir où l'on a le moins envie de taper. `src/lib/foods.ts` porte une
+courte liste d'aliments courants qui comble ce démarrage à froid, et sert
+ensuite d'aide-mémoire — « ah oui, du café ». Demandée par l'utilisatrice
+(« une liste d'aliment générique à sélectionner et possibilité d'en
+ajouter »).
+
+- **Elle recule à mesure que le carnet apprend.** Le total affiché reste
+  autour de dix mots : `commonSuggestions()` rend `10 − nombre d'habitudes`,
+  avec un plancher de cinq. Au bout de deux semaines, ce qui s'affiche vient
+  presque entièrement de la personne. Le plancher garde une amorce visible
+  même avec six habitudes bien installées — c'est là que l'aide-mémoire sert,
+  pour l'aliment qu'on ne mange qu'une fois par mois.
+- **Deux lignes, deux sources** : « Souvent : … » (ce qui a déjà été noté),
+  puis « Ou bien : … ». Sans habitudes, la seconde s'annonce « Par
+  exemple : … » — « ou bien » suppose une première liste.
+- **Comparaison souple** (`normaliseFood`, casse et accents) : le champ est
+  libre, « Fromage » et « fromage » sont le même aliment. Sans ça la liste
+  reproposait ce qui venait d'être choisi.
+- **Ordre fixe**, comme celui des habitudes : une liste qui bouge d'une
+  ouverture à l'autre ne se vise plus de mémoire.
+- ⚠️ **Ce n'est pas une liste de déclencheurs.** Des aliments ordinaires d'un
+  repas français, pas une nomenclature et pas un tri « bon / mauvais » :
+  l'app note ce qui a été mangé, elle ne donne pas d'avis médical. Pour la
+  même raison, **le médicament n'a pas de liste d'amorce** — proposer des
+  noms de molécules, c'est orienter vers un produit ; il garde son unique
+  « La dernière fois : … », tiré de ce que la personne a elle-même écrit.
+- Rien n'y est enfermé : le champ reste libre, et ce qu'on y tape devient une
+  habitude au bout de quelques journées. C'est ça, la « possibilité d'en
+  ajouter » — pas un écran de gestion de liste.
+
+25 assertions Playwright : ordre par fréquence puis alphabétique, six
+habitudes au plus, amorce qui ne répète jamais une habitude ni un aliment
+déjà choisi, total borné, casse et accents, hauteur de cible mesurée (45 px),
+absence de fond et de bordure sur les mots (donc pas de pastille), ajout au
+champ depuis les deux lignes, apparition et disparition de la proposition de
+médicament, et carnet vierge où l'amorce propose bien dix aliments.
 
 **Renommage `/aujourdhui` → `/accueil`** : l'onglet et la route s'appellent
 désormais « Accueil ». Deux précautions pour ne pas casser une app déjà
@@ -936,7 +970,9 @@ ressembler à un site généré par IA.**
   jours avec médicament.
 - **Ce qui revient souvent, proposé en toutes lettres** sous les champs
   repas et médicament — des mots tapables dans une phrase, pas une liste
-  déroulante ni une rangée de pastilles. 16 assertions Playwright.
+  déroulante ni une rangée de pastilles. Complété par une **liste d'amorce**
+  d'aliments courants pour le premier soir, qui recule à mesure que le
+  carnet apprend. 25 assertions Playwright.
 - **Résumé du jour en prose**, chaque fragment tapable (troisième version,
   voir § La journée entière). Bloc « À rattraper » retiré.
   30 assertions Playwright.

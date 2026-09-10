@@ -107,13 +107,22 @@ export function DayWizard({
   const slide = reduce ? 0 : forward ? 28 : -28;
 
   return (
-    <div
+    <>
+      {/* Voile : seulement là où le panneau ne couvre pas tout l'écran. */}
+      <div aria-hidden className="fixed inset-0 z-40 hidden bg-ground/90 md:block" />
+      <div
       role="dialog"
       aria-modal="true"
       aria-label="Résumé de la journée"
       ref={panel}
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex flex-col bg-background outline-none"
+      // Plein écran au téléphone — c'est le geste principal, il mérite tout
+      // l'écran. Sur large, la même colonne de lecture que le reste de l'app,
+      // bordée de deux filets : une **colonne de page**, pas une carte
+      // flottante (le projet n'en veut pas, voir CLAUDE.md). Une question
+      // seule au milieu de 1440 px serait perdue.
+      className="fixed inset-0 z-50 flex flex-col bg-background outline-none
+        md:left-1/2 md:w-[34rem] md:-translate-x-1/2 md:border-x md:border-[color:var(--hairline)]"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <header className="flex items-center justify-between px-4 pt-3">
@@ -182,7 +191,8 @@ export function DayWizard({
           Tout est enregistré en direct — tu peux t&apos;arrêter là où tu veux.
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

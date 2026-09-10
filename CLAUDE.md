@@ -198,7 +198,8 @@ toute première direction, n'existe plus que dans l'historique Git.
     calendar/       — grille mensuelle
     stats/          — courbes de tendance dessinées à la main
     pwa/            — enregistrement du service worker, invite iOS "à l'écran d'accueil"
-    app-shell/      — barre de navigation basse (capsule + pastille glissante)
+    app-shell/      — navigation : capsule basse (téléphone), barre d'en-tête
+                      (écran large), items et onglet actif partagés
   src/lib/
     supabase/       — clients browser/server/proxy + types
     entries-client.ts, profile-client.ts, pending-entries.ts,
@@ -606,6 +607,51 @@ daté, BOM, en-têtes, échappement des guillemets et points-virgules,
 confirmation et renoncement, retour au calendrier après suppression,
 effacement total.
 
+## Écran large — l'app tient aussi sur un ordinateur
+
+Elle était dessinée pour 390 px de large et n'avait aucune borne : sur une
+fenêtre de 1440 px, le texte s'étirait sur toute la largeur (mesure de
+lecture illisible), le bouton principal faisait 1400 px, et la barre pensée
+pour le pouce flottait en bas d'un écran où la souris ne va jamais.
+
+Trois décisions, à `md` (768 px) :
+
+- **Une colonne de lecture de 34 rem** (`COLUMN` dans `(app)/layout.tsx`),
+  partagée par l'en-tête et le contenu. C'est la largeur d'une colonne de
+  magazine : l'app reste un carnet, elle ne devient pas un tableau de bord
+  parce que l'écran est grand. L'en-tête, lui, tient toute la largeur — son
+  filet doit filer d'un bord à l'autre — mais son contenu s'aligne sur la
+  colonne.
+- **La navigation passe dans l'en-tête** (`HeaderNav`), trois mots avec un
+  filet corail sous celui où l'on est ; la capsule du bas devient
+  `md:hidden`. Une pastille glissante dans un en-tête ferait décoration.
+  ⚠️ Les deux barres sont **montées en même temps** (l'une cachée par CSS) :
+  c'est pourquoi `HeaderNav` n'utilise pas `layoutId` — deux pastilles
+  partageant le même identifiant se disputeraient l'animation. Le choix de
+  l'onglet actif est partagé par `useActiveHref()`
+  (`src/components/app-shell/nav-items.ts`), y compris l'optimisme au clic.
+- **Le parcours pas à pas devient une colonne de page**, bordée de deux
+  filets sur un voile sombre, à la largeur de la colonne — pas une carte
+  flottante (le projet n'en veut pas), et pas non plus une question perdue au
+  milieu de 1440 px.
+
+Copie neutralisée : « Touche un jour… » → « **Choisis** un jour… ». Le même
+texte est lu au doigt et à la souris.
+
+### ⚠️ Débordement horizontal trouvé au passage
+
+Le halo de l'accueil débordait de 40 px de chaque côté (`inset-x-[-2.5rem]`)
+et ajoutait **7 px de défilement horizontal** sur un écran de 390 px — donc
+sur le téléphone, et seulement les jours non notés, ceux où le halo
+s'affiche. Invisible à l'œil, mais la page partait de travers au doigt. Le
+halo est désormais `inset-x-0`, avec un dégradé élargi pour compenser.
+Une assertion vérifie l'absence de débordement sur les quatre écrans à
+390, 768, 1024 et 1440 px.
+
+**48 assertions Playwright** aux quatre largeurs : pas de débordement,
+colonne bornée à 544 px, une seule navigation visible à la fois, la bonne
+selon la largeur, et le parcours à la bonne taille et centré.
+
 ## PWA
 
 - **Manifest** : `src/app/manifest.ts` (route générée
@@ -791,6 +837,11 @@ ressembler à un site généré par IA.**
 - **Résumé du jour en prose**, chaque fragment tapable (troisième version,
   voir § La journée entière). Bloc « À rattraper » retiré.
   30 assertions Playwright.
+
+- **Utilisable sur ordinateur** : colonne de lecture bornée, navigation en
+  en-tête sur écran large, parcours en colonne de page. Débordement
+  horizontal de 7 px corrigé au passage. 48 assertions Playwright à quatre
+  largeurs.
 
 **Reste à faire :**
 - **Tester sur un vrai iPhone** — c'est le dernier vrai test qui manque,

@@ -98,7 +98,7 @@ export function DaySummary({
       </p>
 
       <p className="mt-5 text-[0.78rem] text-muted/70">
-        Touche un mot pour revenir sur sa question.
+        Choisis un mot pour revenir sur sa question.
       </p>
     </div>
   );

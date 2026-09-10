@@ -243,7 +243,7 @@ export function MonthRing() {
       </div>
 
       <p className="text-center text-[0.78rem] text-muted/70 mt-4">
-        Touche un jour de l&apos;anneau pour l&apos;ouvrir.
+        Choisis un jour sur l&apos;anneau pour l&apos;ouvrir.
       </p>
     </div>
   );

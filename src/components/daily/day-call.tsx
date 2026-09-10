@@ -37,10 +37,14 @@ export function DayCall({
       {glow && (
         <div
           aria-hidden
-          className="breathe pointer-events-none absolute inset-x-[-2.5rem] top-0 -z-10 h-64"
+          // ⚠️ `inset-x-0`, pas de valeur négative : débordant de 40 px de
+          // chaque côté, ce halo ajoutait 7 px de défilement horizontal à la
+          // page sur un écran de 390 px — invisible à l'œil, mais la page
+          // partait de travers au doigt. Le dégradé est élargi pour compenser.
+          className="breathe pointer-events-none absolute inset-x-0 top-0 -z-10 h-64"
           style={{
             background:
-              "radial-gradient(52% 58% at 50% 55%, color-mix(in srgb, var(--color-coral) 26%, transparent), transparent 74%)",
+              "radial-gradient(72% 58% at 50% 55%, color-mix(in srgb, var(--color-coral) 26%, transparent), transparent 76%)",
           }}
         />
       )}

@@ -1,10 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { JournalIcon, RingIcon, TrendIcon } from "@/components/icons";
+import { NAV_ITEMS, useActiveHref } from "@/components/app-shell/nav-items";
 import { cn } from "@/lib/cn";
 
 /**
@@ -47,49 +45,33 @@ import { cn } from "@/lib/cn";
  * destinations s'annoncent pareil, ouvertes ou repliées. L'animation
  * s'efface entièrement sous `prefers-reduced-motion`.
  */
-const ITEMS = [
-  { href: "/accueil", label: "Accueil", Icon: JournalIcon },
-  { href: "/calendrier", label: "Calendrier", Icon: RingIcon },
-  { href: "/statistiques", label: "Repères", Icon: TrendIcon },
-] as const;
-
 const GLIDE = { type: "spring", stiffness: 420, damping: 36, mass: 0.8 } as const;
 
 export function BottomNav() {
-  const pathname = usePathname();
+  const { active: activeHref, onTap } = useActiveHref();
   const reduce = useReducedMotion();
   const transition = reduce ? { duration: 0 } : GLIDE;
 
-  const routed = ITEMS.find((item) => pathname?.startsWith(item.href))?.href ?? null;
-  const [tapped, setTapped] = useState<string | null>(null);
-  // Dès que la route demandée est arrivée, c'est elle qui fait foi — on lâche
-  // la destination optimiste (ajustement d'état pendant le rendu, sans effet
-  // ni rendu intermédiaire visible).
-  const lastRouted = useRef(routed);
-  if (lastRouted.current !== routed) {
-    lastRouted.current = routed;
-    if (tapped !== null) setTapped(null);
-  }
-  const active = tapped ?? routed;
-
   return (
     <div
-      className="sticky bottom-0 z-30 px-3 pt-8 bg-gradient-to-t from-background via-background to-transparent"
+      // Masquée sur écran large : la navigation passe dans l'en-tête, une
+      // barre au pouce n'a pas de sens avec une souris.
+      className="md:hidden sticky bottom-0 z-30 px-3 pt-8 bg-gradient-to-t from-background via-background to-transparent"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <nav
         aria-label="Navigation principale"
         className="mx-auto flex w-full max-w-[24rem] items-center rounded-full hairline bg-surface p-1.5"
       >
-        {ITEMS.map(({ href, label, Icon }) => {
-          const on = active === href;
+        {NAV_ITEMS.map(({ href, label, Icon }) => {
+          const on = activeHref === href;
           return (
             <Link
               key={href}
               href={href}
               aria-label={label}
               aria-current={on ? "page" : undefined}
-              onClick={() => setTapped(href)}
+              onClick={() => onTap(href)}
               className={cn(
                 "relative flex min-h-[56px] min-w-0 flex-1 items-center justify-center rounded-full transition-colors duration-200",
                 on ? "text-accent" : "text-muted hover:text-foreground"

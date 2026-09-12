@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js")</script>
+<title>endo — Velours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1A15; --surface:#16241D; --surface-2:#1E3128;
+  --ink:#F4EFE3; --muted:#A9B8AE;
+  --gold:#D9B979; --magenta:#E8447F;
+  --line: rgba(244,239,227,.14);
+  --radius: 18px;
+  --display:"Bricolage Grotesque", system-ui, sans-serif;
+  --ui:"Manrope", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:clamp(20px,5vw,56px)}
+img,svg{display:block;max-width:100%}
+button{font-family:inherit}
+
+/* nav */
+header{position:sticky;top:0;z-index:40;background:rgba(15,26,21,0);border-bottom:1px solid transparent;
+  transition:background .25s, border-color .25s}
+header.is-scrolled{background:rgba(15,26,21,.88);backdrop-filter:blur(10px);border-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding-block:20px}
+.logo{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.06em;text-transform:uppercase}
+.nav-links{display:flex;gap:34px;align-items:center;list-style:none;margin:0;padding:0}
+.nav-links a{font-size:14.5px;text-decoration:none;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-ctas{display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:14.5px;
+  text-decoration:none;cursor:pointer;border-radius:999px;min-height:52px;padding-inline:26px;
+  transition:transform .18s, background .2s, border-color .2s, color .2s;border:1.5px solid transparent}
+.btn-primary{background:var(--magenta);color:#0F1A15}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-ghost{border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.menu-toggle{display:none;width:52px;height:52px;border:1.5px solid var(--line);border-radius:999px;
+  background:transparent;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.menu-toggle span,.menu-toggle::before,.menu-toggle::after{content:"";display:block;width:20px;height:1.5px;background:var(--ink)}
+.mobile-menu{display:none}
+
+/* hero */
+.hero{position:relative;padding-block:clamp(64px,11vw,140px);overflow:hidden}
+.hero-marquee{position:absolute;inset:0;display:flex;align-items:center;z-index:0;opacity:.07;
+  font-family:var(--display);font-weight:800;font-size:14vw;white-space:nowrap;color:var(--gold);
+  animation:scroll-x 34s linear infinite}
+@media (prefers-reduced-motion: reduce){.hero-marquee{animation:none}}
+@keyframes scroll-x{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.hero-inner{position:relative;z-index:1;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:26px}
+h1.hero-title{font-family:var(--display);font-weight:700;font-size:clamp(42px,8vw,104px);
+  line-height:0.98;letter-spacing:-.02em;margin:0 auto 28px;max-width:15ch}
+h1.hero-title .pop{color:var(--magenta)}
+.hero-lede{font-size:clamp(16px,1.6vw,19px);color:var(--muted);max-width:52ch;margin:0 auto 38px}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+:where(html.js) [data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .7s ease, transform .7s ease}
+[data-reveal].is-visible{opacity:1;transform:none}
+
+/* ticker */
+.ticker-band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--surface)}
+.ticker{display:flex;gap:56px;white-space:nowrap;padding-block:16px;animation:scroll-x 26s linear infinite;
+  font-family:var(--display);font-weight:600;font-size:15px;color:var(--muted)}
+.ticker-band:hover .ticker{animation-play-state:paused}
+@media (prefers-reduced-motion: reduce){.ticker{animation:none;flex-wrap:wrap;white-space:normal}}
+.ticker span{color:var(--gold)}
+
+/* stats */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-block:clamp(56px,8vw,96px)}
+.stat b{font-family:var(--display);font-weight:800;font-size:clamp(40px,6vw,64px);display:block;color:var(--ink);line-height:1}
+.stat span{font-size:13.5px;color:var(--muted)}
+
+/* sections */
+.section{padding-block:clamp(48px,7vw,96px)}
+.section-head{max-width:680px;margin-bottom:clamp(36px,5vw,56px)}
+.section-tag{font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--magenta);font-weight:700;margin-bottom:14px}
+.section-title{font-family:var(--display);font-size:clamp(28px,4.6vw,48px);font-weight:700;margin:0 0 12px;letter-spacing:-.01em}
+.section-sub{color:var(--muted);font-size:16px;margin:0;max-width:60ch}
+
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:150px;gap:14px}
+.bento .card{grid-column:span 2;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:24px;display:flex;flex-direction:column;justify-content:flex-end;transition:border-color .25s, transform .25s}
+.bento .card:hover{border-color:var(--gold);transform:translateY(-4px)}
+.bento .card.big{grid-column:span 2;grid-row:span 2}
+.bento .card h3{font-family:var(--display);font-weight:700;font-size:19px;margin:0 0 6px}
+.bento .card p{color:var(--muted);font-size:13.5px;margin:0}
+.bento .card .ic{color:var(--gold);margin-bottom:auto}
+
+/* timeline */
+.timeline{display:grid;gap:0}
+.tl-item{display:grid;grid-template-columns:140px 1fr;gap:28px;padding-block:34px;position:relative}
+.tl-item::before{content:"";position:absolute;left:140px;top:0;bottom:0;width:1px;background:var(--line)}
+.tl-item:last-child::before{display:none}
+.tl-num{font-family:var(--display);font-weight:800;font-size:56px;color:transparent;
+  -webkit-text-stroke:1.5px var(--gold);line-height:1;align-self:start}
+.tl-body h3{font-size:19px;margin:0 0 8px;font-weight:700}
+.tl-body p{color:var(--muted);font-size:14.5px;margin:0;max-width:52ch}
+
+/* privacy callouts */
+.callouts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;background:var(--surface-2);
+  border-radius:24px;padding:clamp(32px,5vw,56px)}
+.callout b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(30px,4vw,44px);color:var(--gold);margin-bottom:10px}
+.callout span{font-size:14px;color:var(--muted)}
+
+/* testimonial collage */
+.collage{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:transform .25s}
+.tcard:nth-child(1){transform:rotate(-1.4deg)}
+.tcard:nth-child(2){transform:rotate(0.8deg);margin-top:24px}
+.tcard:nth-child(3){transform:rotate(-0.6deg)}
+.tcard:hover{transform:rotate(0deg) translateY(-4px)}
+.tcard p{font-family:var(--display);font-weight:600;font-size:16.5px;line-height:1.4;margin:0 0 16px}
+.tcard span{font-size:13px;color:var(--muted)}
+
+/* final cta */
+.cta-final{background:var(--magenta);color:#0F1A15;border-radius:28px;padding:clamp(56px,9vw,100px);text-align:center}
+.cta-final h2{font-family:var(--display);font-weight:800;font-size:clamp(30px,5.4vw,58px);margin:0 0 18px;letter-spacing:-.02em}
+.cta-final p{margin:0 0 30px;font-weight:600;opacity:.85}
+.cta-final .btn-primary{background:#0F1A15;color:var(--ink)}
+
+footer{border-top:1px solid var(--line);padding-block:40px}
+.foot-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.foot-grid a{text-decoration:none;color:var(--muted)}
+.foot-grid a:hover{color:var(--ink)}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap}
+.disclaimer{max-width:64ch;font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.6}
+
+@media (max-width: 900px){
+  .nav-links{display:none}
+  .nav-ctas{display:none}
+  .menu-toggle{display:flex}
+  .stat-row{grid-template-columns:1fr;gap:32px;text-align:center}
+  .bento{grid-template-columns:1fr;grid-auto-rows:auto}
+  .bento .card, .bento .card.big{grid-column:span 1;grid-row:span 1;min-height:150px}
+  .tl-item{grid-template-columns:56px 1fr;gap:18px}
+  .tl-item::before{left:56px}
+  .tl-num{font-size:36px}
+  .callouts{grid-template-columns:1fr}
+  .collage{grid-template-columns:1fr}
+  .tcard,.tcard:nth-child(2){transform:none;margin-top:0}
+  .foot-grid{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<header data-nav>
+  <div class="wrap nav">
+    <a href="#" class="logo">endo</a>
+    <ul class="nav-links">
+      <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#confidentialite">Confidentialité</a></li>
+    </ul>
+    <div class="nav-ctas">
+      <a href="#" class="btn btn-ghost" style="min-height:44px;padding-inline:20px">Se connecter</a>
+      <a href="#" class="btn btn-primary">Rejoindre endo</a>
+    </div>
+    <button class="menu-toggle" data-menu-toggle aria-label="Menu" aria-expanded="false"></button>
+  </div>
+  <div class="mobile-menu" data-menu>
+    <div class="wrap" style="display:flex;flex-direction:column;gap:18px;padding-block:20px;border-top:1px solid var(--line)">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#comment">Comment ça marche</a>
+      <a href="#confidentialite">Confidentialité</a>
+      <a href="#" class="btn btn-ghost" style="justify-content:flex-start">Se connecter</a>
+      <a href="#" class="btn btn-primary" style="justify-content:center">Rejoindre endo</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-marquee" aria-hidden="true">CARTOGRAPHIÉE · CARTOGRAPHIÉE · CARTOGRAPHIÉE · CARTOGRAPHIÉE · </div>
+    <div class="wrap hero-inner">
+      <span class="eyebrow">● Le carnet d'endométriose</span>
+      <h1 class="hero-title">Votre douleur, enfin <span class="pop">cartographiée</span>.</h1>
+      <p class="hero-lede">Crise, intensité, sommeil, humeur, énergie — endo transforme vos soirs de
+      saisie en repères que vous pouvez montrer, comprendre, et enfin anticiper.</p>
+      <div class="hero-cta">
+        <a href="#" class="btn btn-primary">Commencer — c'est gratuit</a>
+        <a href="#comment" class="btn btn-ghost">Comment ça marche</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker-band">
+    <div class="ticker" aria-hidden="true">
+      <span>1 femme sur 10</span> touchée par l'endométriose dans le monde (OMS)
+      <span>7 ans</span> de délai de diagnostic en moyenne, en France
+      <span>Vous n'êtes pas seule.</span>
+      <span>1 femme sur 10</span> touchée par l'endométriose dans le monde (OMS)
+      <span>7 ans</span> de délai de diagnostic en moyenne, en France
+      <span>Vous n'êtes pas seule.</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="stat-row" data-reveal>
+      <div class="stat"><b data-count="10" data-suffix="&nbsp;%">0&nbsp;%</b><span>des femmes concernées, selon l'OMS</span></div>
+      <div class="stat"><b data-count="18" data-suffix="&nbsp;j">0&nbsp;j</b><span>intervalle moyen suivi entre deux crises</span></div>
+      <div class="stat"><b data-count="30" data-suffix="&nbsp;sec">0&nbsp;sec</b><span>pour remplir votre carnet du soir</span></div>
+    </div>
+  </div>
+
+  <section class="section wrap" id="fonctionnalites">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Ce que vous suivez</span>
+      <h2 class="section-title">Six écrans. Aucun superflu.</h2>
+      <p class="section-sub">Chaque champ a été gardé parce qu'il change quelque chose à votre suivi.</p>
+    </div>
+    <div class="bento" data-reveal>
+      <div class="card big">
+        <div class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 3 6.5 3c2 0 3.5 1.2 4.5 2.8C12 4.2 13.5 3 15.5 3 20 3 21.5 8 19.5 12c-2.5 4.5-7.5 9-7.5 9Z"/></svg></div>
+        <h3>Crise & intensité</h3>
+        <p>Un geste pour marquer une crise et noter son intensité de 0 à 10.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <h3>Calendrier en anneau</h3>
+        <p>Vos cycles, pas une grille.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17l5-6 4 4 8-10"/></svg></div>
+        <h3>Tendances</h3>
+        <p>Douleur, sommeil, humeur sur 21 jours.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Compte privé</h3>
+        <p>Isolation stricte, aucun partage.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg></div>
+        <h3>Installable</h3>
+        <p>Sur l'écran d'accueil, hors-ligne.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="comment">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Comment ça marche</span>
+      <h2 class="section-title">Trois gestes, chaque soir</h2>
+    </div>
+    <div class="timeline" data-reveal>
+      <div class="tl-item">
+        <div class="tl-num">01</div>
+        <div class="tl-body"><h3>Créez votre carnet</h3><p>Email et mot de passe. Gratuit, sans engagement, en une minute.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num">02</div>
+        <div class="tl-body"><h3>Notez votre journée</h3><p>Crise, douleur, sommeil, humeur — glissez les réglettes, c'est tout.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-num">03</div>
+        <div class="tl-body"><h3>Repérez vos schémas</h3><p>Le calendrier et les courbes font apparaître ce que la mémoire seule oublie.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="confidentialite">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Confidentialité</span>
+      <h2 class="section-title">Rien ne sort de votre carnet</h2>
+    </div>
+    <div class="callouts" data-reveal>
+      <div class="callout"><b>0</b><span>publicité affichée, jamais</span></div>
+      <div class="callout"><b>0</b><span>donnée partagée entre comptes</span></div>
+      <div class="callout"><b>100&nbsp;%</b><span>de vos entrées protégées par isolation en base (RLS)</span></div>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Elles en parlent</span>
+      <h2 class="section-title">Ce que ça change</h2>
+    </div>
+    <div class="collage" data-reveal>
+      <div class="tcard"><p>« J'ai enfin des chiffres à montrer à mon médecin. »</p><span>— Camille, 29 ans</span></div>
+      <div class="tcard"><p>« Le calendrier a révélé un rythme que je n'avais jamais vu. »</p><span>— Sarah, 34 ans</span></div>
+      <div class="tcard"><p>« Trente secondes le soir, et plus de doute sur "c'était mieux avant". »</p><span>— Léa, 26 ans</span></div>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="cta-final" data-reveal>
+      <h2>Commencez ce soir.</h2>
+      <p>Gratuit, privé, sans engagement.</p>
+      <a href="#" class="btn btn-primary">Créer mon carnet</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <a href="#" class="logo" style="font-size:16px">endo</a>
+      <div class="foot-links">
+        <a href="#">Confidentialité</a>
+        <a href="#">Conditions</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <p class="disclaimer">endo est un projet indépendant de suivi personnel. Il ne remplace pas un
+    diagnostic, un suivi ou un avis médical — parlez-en toujours à un professionnel de santé.</p>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

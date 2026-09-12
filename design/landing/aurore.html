@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>document.documentElement.classList.add("js")</script>
+<title>endo — Aurore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF1E7; --bg-deep:#F3E1D1; --surface:#FFFDF9;
+  --ink:#37232B; --muted:#7A6259;
+  --terracotta:#D9714A; --terracotta-ink:#FBF1E7;
+  --sage:#7C9473; --gold:#C89B4A;
+  --line: rgba(55,35,43,.16);
+  --radius: 26px;
+  --display: "Fraunces", Georgia, serif;
+  --ui: "Work Sans", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:clamp(20px,5vw,56px)}
+img,svg{display:block;max-width:100%}
+button{font-family:inherit}
+
+/* ---------- nav ---------- */
+header{position:sticky;top:0;z-index:40;background:rgba(251,241,231,0);
+  transition:background .3s ease, border-color .3s ease;border-bottom:1px solid transparent}
+header.is-scrolled{background:rgba(251,241,231,.86);backdrop-filter:blur(10px);border-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding-block:18px}
+.logo{font-family:var(--display);font-style:italic;font-size:26px;letter-spacing:-.01em}
+.nav-links{display:flex;gap:36px;align-items:center;list-style:none;margin:0;padding:0}
+.nav-links a{font-size:15px;text-decoration:none;color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-ctas{display:flex;align-items:center;gap:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--ui);font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;
+  border:1px solid transparent;transition:transform .18s ease, background .2s ease, border-color .2s ease;
+  min-height:52px;padding-inline:26px;border-radius:999px}
+.btn-primary{background:var(--terracotta);color:var(--terracotta-ink)}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--ink)}
+.menu-toggle{display:none;width:52px;height:52px;border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);align-items:center;justify-content:center}
+.menu-toggle span,.menu-toggle::before,.menu-toggle::after{content:"";display:block;width:20px;height:1.5px;background:var(--ink)}
+.menu-toggle{flex-direction:column;gap:5px}
+.mobile-menu{display:none}
+
+/* ---------- hero ---------- */
+.hero{padding-block:clamp(48px,8vw,96px)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,64px);align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:13px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sage);font-weight:600;margin-bottom:22px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--sage)}
+h1.hero-title{font-family:var(--display);font-weight:500;font-size:clamp(40px,6vw,70px);
+  line-height:1.04;letter-spacing:-.01em;margin:0 0 22px}
+h1.hero-title em{font-style:italic;color:var(--terracotta)}
+.hero-lede{font-size:clamp(17px,1.6vw,19px);color:var(--muted);max-width:46ch;margin:0 0 34px}
+.hero-cta{display:flex;gap:16px;flex-wrap:wrap}
+.arrow{transition:transform .2s}
+.btn-ghost:hover .arrow{transform:translateX(3px)}
+
+.hero-art{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border-radius:50%;border:1px solid var(--line)}
+.ring.r1{inset:0}
+.ring.r2{inset:14%;border-color:rgba(217,113,74,.35)}
+.ring.r3{inset:30%;background:var(--terracotta)}
+.hero-card{position:absolute;bottom:6%;left:-6%;background:var(--surface);border:1px solid var(--line);
+  border-radius:20px;padding:16px 18px;width:190px;animation:float 7s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.hero-card{animation:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.hero-card b{font-family:var(--display);font-size:28px;display:block;color:var(--terracotta)}
+.hero-card span{font-size:12.5px;color:var(--muted)}
+
+/* ---------- reveal ---------- */
+:where(html.js) [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .7s ease, transform .7s ease}
+[data-reveal].is-visible{opacity:1;transform:none}
+
+/* ---------- stat band ---------- */
+.band{background:var(--sage);color:#20301D;padding-block:44px;margin-block:clamp(40px,7vw,88px)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:center}
+.stat b{font-family:var(--display);font-size:clamp(34px,5vw,52px);font-weight:500;display:block}
+.stat span{font-size:14px;opacity:.85}
+
+/* ---------- sections ---------- */
+.section{padding-block:clamp(48px,7vw,96px)}
+.section-head{max-width:640px;margin-bottom:clamp(32px,5vw,56px)}
+.section-tag{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--terracotta);font-weight:600;margin-bottom:14px}
+.section-title{font-family:var(--display);font-size:clamp(28px,4vw,42px);font-weight:500;margin:0 0 12px;line-height:1.15}
+.section-sub{color:var(--muted);font-size:16px;margin:0}
+
+/* features: offset staggered grid */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:28px;transition:transform .25s ease, border-color .25s ease}
+.feat:nth-child(2){transform:translateY(28px)}
+.feat:hover{transform:translateY(-6px)}
+.feat:nth-child(2):hover{transform:translateY(22px)}
+.feat-ic{width:44px;height:44px;border-radius:12px;background:var(--bg-deep);
+  display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--terracotta)}
+.feat h3{font-family:var(--display);font-weight:500;font-size:20px;margin:0 0 8px}
+.feat p{color:var(--muted);font-size:14.5px;margin:0}
+
+/* how it works */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:relative}
+.step{padding:8px}
+.step-num{font-family:var(--display);font-style:italic;font-size:52px;color:var(--terracotta);line-height:1;margin-bottom:14px}
+.step h3{font-size:18px;margin:0 0 8px;font-weight:600}
+.step p{color:var(--muted);font-size:14.5px;margin:0}
+
+/* privacy */
+.privacy{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;
+  background:var(--bg-deep);border-radius:32px;padding:clamp(28px,5vw,56px)}
+.privacy ul{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.privacy li{display:flex;gap:14px;align-items:flex-start;font-size:15px}
+.privacy li svg{flex:none;color:var(--sage);margin-top:2px}
+.badge-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:32px;text-align:center}
+.badge-card b{display:block;font-family:var(--display);font-style:italic;font-size:24px;margin-bottom:6px}
+.badge-card span{color:var(--muted);font-size:14px}
+
+/* quote */
+.quote-band{background:var(--terracotta);color:var(--terracotta-ink);padding-block:clamp(56px,8vw,96px)}
+.quote{max-width:760px;margin:0 auto;text-align:center}
+.quote p{font-family:var(--display);font-style:italic;font-weight:500;font-size:clamp(22px,3.4vw,34px);line-height:1.35;margin:0 0 22px}
+.quote-who{display:flex;align-items:center;justify-content:center;gap:12px;font-size:14px}
+.quote-who .dot{width:38px;height:38px;border-radius:50%;background:rgba(251,241,231,.25);
+  display:flex;align-items:center;justify-content:center;font-family:var(--display);font-style:italic}
+
+/* final CTA */
+.cta-final{text-align:center;padding-block:clamp(64px,10vw,120px)}
+.cta-final h2{font-family:var(--display);font-weight:500;font-size:clamp(30px,5vw,52px);margin:0 0 20px}
+.cta-final p{color:var(--muted);margin:0 0 32px}
+
+footer{border-top:1px solid var(--line);padding-block:40px}
+.foot-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.foot-grid a{text-decoration:none;color:var(--muted)}
+.foot-grid a:hover{color:var(--ink)}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap}
+.disclaimer{max-width:60ch;font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.6}
+
+@media (max-width: 900px){
+  .nav-links{display:none}
+  .nav-ctas{display:none}
+  .menu-toggle{display:flex}
+  .hero-grid{grid-template-columns:1fr}
+  .hero-art{order:-1;width:100%;max-width:340px;margin:0 auto}
+  .stat-row{grid-template-columns:1fr;gap:28px}
+  .feat-grid{grid-template-columns:1fr}
+  .feat:nth-child(2){transform:none}
+  .feat:nth-child(2):hover{transform:translateY(-6px)}
+  .steps{grid-template-columns:1fr;gap:32px}
+  .privacy{grid-template-columns:1fr}
+  .foot-grid{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<header data-nav>
+  <div class="wrap nav">
+    <a href="#" class="logo"><em>endo</em></a>
+    <ul class="nav-links">
+      <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+      <li><a href="#comment">Comment ça marche</a></li>
+      <li><a href="#confidentialite">Confidentialité</a></li>
+    </ul>
+    <div class="nav-ctas">
+      <a href="#" class="btn btn-ghost" style="min-height:44px;padding-inline:20px">Se connecter</a>
+      <a href="#" class="btn btn-primary">Créer mon carnet</a>
+    </div>
+    <button class="menu-toggle" data-menu-toggle aria-label="Menu" aria-expanded="false"></button>
+  </div>
+  <div class="mobile-menu" data-menu>
+    <div class="wrap" style="display:flex;flex-direction:column;gap:18px;padding-block:20px;border-top:1px solid var(--line)">
+      <a href="#fonctionnalites">Fonctionnalités</a>
+      <a href="#comment">Comment ça marche</a>
+      <a href="#confidentialite">Confidentialité</a>
+      <a href="#" class="btn btn-ghost" style="justify-content:flex-start">Se connecter</a>
+      <a href="#" class="btn btn-primary" style="justify-content:center">Créer mon carnet</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Carnet quotidien</span>
+        <h1 class="hero-title">Traversez l'endométriose,<br><em>un jour</em> à la fois.</h1>
+        <p class="hero-lede">Notez vos crises, votre douleur, votre sommeil et votre humeur en
+        moins d'une minute. endo relie les points pour vous montrer ce que vous ne voyez pas
+        au jour le jour.</p>
+        <div class="hero-cta">
+          <a href="#" class="btn btn-primary">Commencer gratuitement</a>
+          <a href="#comment" class="btn btn-ghost">Voir comment ça marche <span class="arrow">→</span></a>
+        </div>
+      </div>
+      <div class="hero-art" data-reveal>
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="hero-card">
+          <b>18 jours</b>
+          <span>intervalle moyen entre deux crises</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="band" data-reveal>
+    <div class="wrap stat-row">
+      <div class="stat"><b data-count="10" data-suffix="&nbsp;%">0&nbsp;%</b><span>des femmes concernées par l'endométriose (OMS)</span></div>
+      <div class="stat"><b data-count="7" data-suffix="&nbsp;ans">0&nbsp;ans</b><span>de délai de diagnostic en moyenne, en France</span></div>
+      <div class="stat"><b data-count="30" data-suffix="&nbsp;sec">0&nbsp;sec</b><span>pour remplir votre carnet du jour</span></div>
+    </div>
+  </div>
+
+  <section class="section wrap" id="fonctionnalites">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Ce que vous suivez</span>
+      <h2 class="section-title">Un carnet pensé pour les jours difficiles</h2>
+      <p class="section-sub">Chaque champ existe parce qu'il compte — rien à remplir pour remplir.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 3 6.5 3c2 0 3.5 1.2 4.5 2.8C12 4.2 13.5 3 15.5 3 20 3 21.5 8 19.5 12c-2.5 4.5-7.5 9-7.5 9Z"/></svg></div>
+        <h3>Crise & intensité</h3>
+        <p>Un geste pour dire « aujourd'hui c'est une crise » et noter son intensité de 0 à 10.</p>
+      </div>
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <h3>Calendrier en anneau</h3>
+        <p>Vos cycles racontés comme un cycle, pas comme une grille de tableur.</p>
+      </div>
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 17l5-6 4 4 8-10"/></svg></div>
+        <h3>Repères & tendances</h3>
+        <p>Intervalle moyen entre deux crises, courbes de douleur, sommeil et humeur.</p>
+      </div>
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v6M12 16v6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M2 12h6M16 12h6M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg></div>
+        <h3>Médicament & notes</h3>
+        <p>Tracez ce qui vous soulage — et ce qui ne fonctionne pas.</p>
+      </div>
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Compte strictement privé</h3>
+        <p>Personne d'autre ne voit vos données. Pas même nous.</p>
+      </div>
+      <div class="feat" data-reveal>
+        <div class="feat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg></div>
+        <h3>Sur votre écran d'accueil</h3>
+        <p>S'installe comme une app, fonctionne même sans connexion.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="comment">
+    <div class="section-head" data-reveal>
+      <span class="section-tag">Comment ça marche</span>
+      <h2 class="section-title">Trois gestes, chaque soir</h2>
+    </div>
+    <div class="steps">
+      <div class="step" data-reveal>
+        <div class="step-num">01</div>
+        <h3>Créez votre carnet</h3>
+        <p>Email et mot de passe. Gratuit, sans engagement, en une minute.</p>
+      </div>
+      <div class="step" data-reveal>
+        <div class="step-num">02</div>
+        <h3>Notez votre journée</h3>
+        <p>Crise, douleur, sommeil, humeur — glissez les réglettes, c'est tout.</p>
+      </div>
+      <div class="step" data-reveal>
+        <div class="step-num">03</div>
+        <h3>Repérez vos tendances</h3>
+        <p>Le calendrier et les courbes font apparaître ce que la mémoire seule oublie.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="confidentialite">
+    <div class="privacy" data-reveal>
+      <div>
+        <span class="section-tag">Confidentialité</span>
+        <h2 class="section-title" style="margin-bottom:20px">Vos données de santé restent à vous</h2>
+        <ul>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Un compte = une personne. Aucun partage entre comptes.</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Base de données chiffrée, isolation stricte par ligne (RLS).</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Aucune publicité, aucune revente de données.</li>
+        </ul>
+      </div>
+      <div class="badge-card">
+        <b>100&nbsp;% privé</b>
+        <span>Vos crises, votre douleur, vos notes — invisibles pour tout le monde, y compris nous.</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="quote-band" data-reveal>
+    <div class="wrap quote">
+      <p>« La première fois que j'ai vu l'intervalle entre mes crises écrit noir sur blanc,
+      j'ai enfin pu en parler à mon médecin avec des chiffres, pas juste un ressenti. »</p>
+      <div class="quote-who"><span class="dot">C</span> Camille, utilisatrice endo</div>
+    </div>
+  </div>
+
+  <section class="cta-final wrap" data-reveal>
+    <h2>Commencez ce soir.</h2>
+    <p>Gratuit, privé, sans engagement.</p>
+    <a href="#" class="btn btn-primary">Créer mon carnet</a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <a href="#" class="logo" style="font-size:20px">endo</a>
+      <div class="foot-links">
+        <a href="#">Confidentialité</a>
+        <a href="#">Conditions</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <p class="disclaimer">endo est un projet indépendant de suivi personnel. Il ne remplace pas un
+    diagnostic, un suivi ou un avis médical — parlez-en toujours à un professionnel de santé.</p>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>

@@ -99,6 +99,33 @@ autres restent documentées comme alternatives : la planche sert de référence
 si tu veux revenir en arrière ou repartir sur l'une d'elles. « Atelier », la
 toute première direction, n'existe plus que dans l'historique Git.
 
+## Landing page publique — `design/landing/`
+
+Distincte des écrans internes de l'app (Nocturne, étroits, mobile-first) :
+une **page vitrine publique** pour présenter endo avant connexion, pensée
+large-écran. Trois pistes visuelles **volontairement différentes de
+Nocturne** (demande explicite, from scratch), chacune une page HTML autonome
+et responsive (mobile/desktop), avec interactions communes dans
+`design/landing/shared.js` (nav sticky, menu mobile, révélation au scroll,
+compteurs animés — tout coupé par `prefers-reduced-motion`, aucune
+librairie) :
+
+- **`aurore.html`** — chaleureuse, éditoriale, organique. Fond ivoire,
+  terracotta/sauge, Fraunces + Work Sans, anneaux concentriques en hero,
+  grille de fonctionnalités en quinconce.
+- **`clarte.html`** — claire, orientée produit/données, rassurante. Blanc/
+  menthe, sarcelle + corail, Space Grotesk + IBM Plex Sans, maquette d'écran
+  app en hero, tableau comparatif de confidentialité façon page trust SaaS.
+- **`velours.html`** — sombre, dramatique, éditoriale bold. Vert bouteille
+  quasi noir, or + magenta (délibérément distinct de l'aubergine/corail de
+  Nocturne), Bricolage Grotesque + Manrope, bandeau défilant de chiffres-clés,
+  bento grid, chronologie en gros numéros à contour.
+
+Aucune n'est sélectionnée à ce stade — à ouvrir dans un navigateur pour
+comparer, comme `themes.html`. Une fois un choix fait, reste à l'intégrer
+comme vraie route Next.js (actuellement des maquettes HTML statiques
+autonomes, pas encore branchées à l'app ni à l'auth Supabase).
+
 ## Architecture technique
 
 - **Framework** : Next.js 16 (App Router, Turbopack), React 19, TypeScript.
